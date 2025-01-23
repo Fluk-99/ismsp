@@ -88,8 +88,8 @@ export default function Page() {
               marginTop: "20px",
             }}
           >
-            "The ISMS Platform made our ISO 27001 journey seamless and stress-free.
-            Highly recommend it!" - Jane Doe, CTO of SecureTech
+            The ISMS Platform made our ISO 27001 journey seamless and stress-free.
+            Highly recommend it! - Jane Doe, CTO of SecureTech
           </blockquote>
         </div>
       </section>

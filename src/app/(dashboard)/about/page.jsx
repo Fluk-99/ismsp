@@ -73,7 +73,7 @@ export default function AboutPage() {
         <section style={{ textAlign: 'center', marginTop: '40px' }}>
           <h2 style={{ fontSize: '1.8rem', color: '#003366' }}>Get Started with ISMS Today!</h2>
           <p style={{ fontSize: '1.1rem', color: '#666' }}>
-            Ready to secure your organization's data? Our platform provides everything you need for ISO/IEC 27001
+            Ready to secure your organization s data? Our platform provides everything you need for ISO/IEC 27001
             compliance.
           </p>
           <button
