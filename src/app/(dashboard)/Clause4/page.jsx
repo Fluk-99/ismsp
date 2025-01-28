@@ -33,7 +33,6 @@ const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
 
 export default function Page() {
   const [expanded, setExpanded] = useState(null);
-
   const [isEditable, setIsEditable] = useState(false);
 
   const [swotFields, setSwotFields] = useState({
@@ -63,10 +62,8 @@ export default function Page() {
 
   const handleFieldChange = (key, index, field, value) => {
     setSwotFields((prev) => {
-      const updated = [...prev, [key]];
-
-      updated[index][field] = value;
-
+      const updated = [...prev[key]];
+      updated[index] = { ...updated[index], [field]: value };
       return { ...prev, [key]: updated };
     });
   };
@@ -77,9 +74,7 @@ export default function Page() {
 
   const handleSave = () => {
     setIsEditable(false);
-
     console.log("SWOT Fields:", swotFields);
-
     alert("Data Saved Successfully!");
   };
 
