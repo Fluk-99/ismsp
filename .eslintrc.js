@@ -9,42 +9,42 @@ module.exports = {
     'lines-around-comment': [
       'error',
       {
-        beforeBlockComment: true,
-        beforeLineComment: true,
-        allowBlockStart: true,
-        allowObjectStart: true,
-        allowArrayStart: true
+        beforeBlockComment: false,
+        beforeLineComment: false,
+        allowBlockStart: false,
+        allowObjectStart: false,
+        allowArrayStart: false
       }
     ],
-    'padding-line-between-statements': [
-      'error',
-      {
-        blankLine: 'any',
-        prev: 'export',
-        next: 'export'
-      },
-      {
-        blankLine: 'always',
-        prev: ['const', 'let', 'var'],
-        next: '*'
-      },
-      {
-        blankLine: 'any',
-        prev: ['const', 'let', 'var'],
-        next: ['const', 'let', 'var']
-      },
-      {
-        blankLine: 'always',
-        prev: '*',
-        next: ['function', 'multiline-const', 'multiline-block-like']
-      },
-      {
-        blankLine: 'always',
-        prev: ['function', 'multiline-const', 'multiline-block-like'],
-        next: '*'
-      }
-    ],
-    'newline-before-return': 'error',
+    // 'padding-line-between-statements': [
+    //   'error',
+    //   {
+    //     blankLine: 'any',
+    //     prev: 'export',
+    //     next: 'export'
+    //   },
+    //   {
+    //     blankLine: 'always',
+    //     prev: ['const', 'let', 'var'],
+    //     next: '*'
+    //   },
+    //   {
+    //     blankLine: 'any',
+    //     prev: ['const', 'let', 'var'],
+    //     next: ['const', 'let', 'var']
+    //   },
+    //   {
+    //     blankLine: 'always',
+    //     prev: '*',
+    //     next: ['function', 'multiline-const', 'multiline-block-like']
+    //   },
+    //   {
+    //     blankLine: 'always',
+    //     prev: ['function', 'multiline-const', 'multiline-block-like'],
+    //     next: '*'
+    //   }
+    // ],
+    // 'newline-before-return': 'error',
     'import/newline-after-import': [
       'error',
       {
