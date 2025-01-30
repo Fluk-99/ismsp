@@ -1,6 +1,6 @@
-"use client"; //
+"use client";
 // React Imports
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // MUI Imports
 import { styled } from "@mui/material/styles";
@@ -34,37 +34,28 @@ const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
 export default function Page() {
   const [expanded, setExpanded] = useState(null);
   const [isEditable, setIsEditable] = useState(false);
-
-  const [swotFields, setSwotFields] = useState({
-    strengths: [{ value: "", type: "Internal Factors" }],
-    weaknesses: [{ value: "", type: "Internal Factors" }],
-    opportunities: [{ value: "", type: "External Factors" }],
-    threats: [{ value: "", type: "External Factors" }],
-  });
+  const [interestedParties, setInterestedParties] = useState([
+    { name: "", needOrExpectation: "Needs" },
+  ]);
+  const [swotFields, setSwotFields] = useState("");
 
   const handleChange = (panel) => (_, isExpanded) => {
     setExpanded(isExpanded ? panel : null);
   };
 
-  const handleAddField = (key) => {
-    setSwotFields((prev) => ({
-      ...prev,
-      [key]: [...prev[key], { value: "", type: "Internal Factors" }],
-    }));
+  const handleAddParty = () => {
+    setInterestedParties((prev) => [...prev, { name: "", needOrExpectation: "Needs" }]);
   };
 
-  const handleRemoveField = (key, index) => {
-    setSwotFields((prev) => ({
-      ...prev,
-      [key]: prev[key].filter((_, i) => i !== index),
-    }));
+  const handleRemoveParty = (index) => {
+    setInterestedParties((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const handleFieldChange = (key, index, field, value) => {
-    setSwotFields((prev) => {
-      const updated = [...prev[key]];
-      updated[index] = { ...updated[index], [field]: value };
-      return { ...prev, [key]: updated };
+  const handlePartyChange = (index, field, value) => {
+    setInterestedParties((prev) => {
+      const updated = [...prev];
+      updated[index][field] = value;
+      return updated;
     });
   };
 
@@ -74,7 +65,6 @@ export default function Page() {
 
   const handleSave = () => {
     setIsEditable(false);
-    console.log("SWOT Fields:", swotFields);
     alert("Data Saved Successfully!");
   };
 
@@ -120,90 +110,56 @@ export default function Page() {
         </Button>
       </div>
 
-      {/* Accordion for SWOT Analysis */}
-      <Accordion expanded={expanded === "panel1"} onChange={handleChange("panel1")}>
-        <AccordionSummary
-          expandIcon={
-            <i
-              className={expanded === "panel1" ? "tabler-minus" : "tabler-plus"}
+      {/* SWOT Section */}
+      <div style={{ marginBottom: "20px" }}>
+        <Typography variant="h6" style={{ marginBottom: "10px" }}>
+          SWOT Analysis
+        </Typography>
+        <TextField
+          fullWidth
+          margin="normal"
+          disabled={!isEditable}
+          label="Enter SWOT Analysis"
+          value={swotFields}
+          onChange={(e) => setSwotFields(e.target.value)}
+        />
+      </div>
+
+      {/* Interested Parties Section */}
+      <div style={{ marginBottom: "20px" }}>
+        <Typography variant="h6" style={{ marginBottom: "10px" }}>
+          Interested Parties
+        </Typography>
+        {interestedParties.map((party, index) => (
+          <div key={index} style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
+            <TextField
+              fullWidth
+              disabled={!isEditable}
+              label="Enter Interested Party"
+              value={party.name}
+              onChange={(e) => handlePartyChange(index, "name", e.target.value)}
             />
-          }
-        >
-          <Typography>SWOT Analysis</Typography>
-        </AccordionSummary>
-
-        <AccordionDetails>
-          {["strengths", "weaknesses", "opportunities", "threats"].map((key) => (
-            <div key={key} style={{ marginBottom: "20px" }}>
-              <Typography variant="h6" style={{ marginBottom: "10px" }}>
-                {key.charAt(0).toUpperCase() + key.slice(1)}
-              </Typography>
-
-              {swotFields[key].map((field, index) => (
-                <div
-                  key={index}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "10px",
-                    marginBottom: "10px",
-                  }}
-                >
-                  <TextField
-                    fullWidth
-                    margin="normal"
-                    disabled={!isEditable}
-                    label={`${key.charAt(0).toUpperCase() + key.slice(1)} Field ${
-                      index + 1
-                    }`}
-                    value={field.value}
-                    onChange={(e) =>
-                      handleFieldChange(key, index, "value", e.target.value)
-                    }
-                  />
-
-                  <Select
-                    disabled={!isEditable}
-                    value={field.type}
-                    onChange={(e) =>
-                      handleFieldChange(key, index, "type", e.target.value)
-                    }
-                  >
-                    <MenuItem value="Internal Factors">
-                      Internal Factors
-                    </MenuItem>
-
-                    <MenuItem value="External Factors">
-                      External Factors
-                    </MenuItem>
-                  </Select>
-
-                  {isEditable && (
-                    <Button
-                      variant="contained"
-                      color="secondary"
-                      onClick={() => handleRemoveField(key, index)}
-                    >
-                      Remove
-                    </Button>
-                  )}
-                </div>
-              ))}
-
-              {isEditable && (
-                <Button
-                  variant="contained"
-                  color="primary"
-                  onClick={() => handleAddField(key)}
-                  style={{ marginTop: "10px" }}
-                >
-                  Add Field
-                </Button>
-              )}
-            </div>
-          ))}
-        </AccordionDetails>
-      </Accordion>
+            <Select
+              disabled={!isEditable}
+              value={party.needOrExpectation}
+              onChange={(e) => handlePartyChange(index, "needOrExpectation", e.target.value)}
+            >
+              <MenuItem value="Needs">Needs</MenuItem>
+              <MenuItem value="Expectations">Expectations</MenuItem>
+            </Select>
+            {isEditable && (
+              <Button variant="contained" color="secondary" onClick={() => handleRemoveParty(index)}>
+                Remove
+              </Button>
+            )}
+          </div>
+        ))}
+        {isEditable && (
+          <Button variant="contained" color="primary" onClick={handleAddParty}>
+            Add Party
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

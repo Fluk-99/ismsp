@@ -78,8 +78,8 @@ const HorizontalMenu = () => {
         <MenuItem href='/Clause4' icon={<i className='tabler-access-point' />}>
           Clause4
         </MenuItem>
-        <MenuItem href='/about4' icon={<i className='ttabler-award-filled'/>}>
-          About4
+        <MenuItem href='/Clause5' icon={<i className='ttabler-award-filled'/>}>
+          clause5
         </MenuItem>
         <MenuItem href='/about5' icon={<i className='tabler-award-filled'/>}>
           About5

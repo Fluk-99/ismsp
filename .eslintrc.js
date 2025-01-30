@@ -51,35 +51,34 @@ module.exports = {
         count: 1
       }
     ],
-    'import/order': [
-      'error',
-      {
-        groups: ['builtin', 'external', ['internal', 'parent', 'sibling', 'index'], ['object', 'unknown']],
-        pathGroups: [
-          {
-            pattern: 'react',
-            group: 'external',
-            position: 'before'
-          },
-          {
-            pattern: 'next/**',
-            group: 'external',
-            position: 'before'
-          },
-          {
-            pattern: '~/**',
-            group: 'external',
-            position: 'before'
-          },
-          {
-            pattern: '@/**',
-            group: 'internal'
-          }
-        ],
-        pathGroupsExcludedImportTypes: ['react', 'type'],
-        'newlines-between': 'always-and-inside-groups'
-      }
-    ]
+    //'import/order': [
+      //'error',
+      //{
+       //groups: ['builtin', 'external', ['internal', 'parent', 'sibling', 'index'], ['object', 'unknown']],
+        //pathGroups: [
+         // {
+         //   pattern: 'react',
+         //   group: 'external',
+         //   position: 'before'
+         // },
+         // {
+          //  pattern: 'next/**',
+           // group: 'external',
+           // position: 'before'
+          //},
+          //{
+           // pattern: '~/**',
+           // group: 'external',
+           // position: 'before'
+          //},
+          //  pattern: '@/**',
+           // group: 'internal'
+          //}
+        //],
+        //pathGroupsExcludedImportTypes: ['react', 'type'],
+        //'newlines-between': 'always-and-inside-groups'
+      //}
+    //]
   },
   settings: {
     react: {
