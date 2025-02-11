@@ -17,21 +17,45 @@ const SectionContainer = styled('div')({
 
 export default function Page() {
   const [isEditable, setIsEditable] = useState(false)
-  const [swotFields, setSwotFields] = useState([{ id: 1, text: '' }])
+
+  // SWOT Categories
+  const [swot, setSwot] = useState({
+    Strength: [{ id: 1, text: '', type: 'Internal' }],
+    Weakness: [{ id: 1, text: '', type: 'Internal' }],
+    Opportunity: [{ id: 1, text: '', type: 'External' }],
+    Threat: [{ id: 1, text: '', type: 'External' }]
+  })
+
   const [interestedParties, setInterestedParties] = useState([{ id: 1, name: '', needOrExpectation: 'Needs' }])
   const [scopeStatements, setScopeStatements] = useState([{ id: 1, text: '' }])
 
   // Functions for SWOT Analysis
-  const handleAddSwot = () => {
-    setSwotFields(prev => [...prev, { id: prev.length + 1, text: '' }])
+  const handleAddSwot = category => {
+    setSwot(prev => ({
+      ...prev,
+      [category]: [
+        ...prev[category],
+        {
+          id: prev[category].length + 1,
+          text: '',
+          type: category === 'Strength' || category === 'Weakness' ? 'Internal' : 'External'
+        }
+      ]
+    }))
   }
 
-  const handleSwotChange = (id, value) => {
-    setSwotFields(prev => prev.map(item => (item.id === id ? { ...item, text: value } : item)))
+  const handleSwotChange = (category, id, field, value) => {
+    setSwot(prev => ({
+      ...prev,
+      [category]: prev[category].map(item => (item.id === id ? { ...item, [field]: value } : item))
+    }))
   }
 
-  const handleRemoveSwot = id => {
-    setSwotFields(prev => prev.filter(item => item.id !== id))
+  const handleRemoveSwot = (category, id) => {
+    setSwot(prev => ({
+      ...prev,
+      [category]: prev[category].filter(item => item.id !== id)
+    }))
   }
 
   // Functions for Interested Parties
@@ -84,33 +108,48 @@ export default function Page() {
         </Button>
       </div>
 
+      {/* SWOT Analysis Section Title */}
+      <Typography variant='h5' style={{ marginBottom: '20px', textAlign: 'center', fontWeight: 'bold' }}>
+        SWOT Analysis
+      </Typography>
+
       {/* SWOT Analysis Section */}
-      <SectionContainer>
-        <Typography variant='h6' style={{ marginBottom: '10px' }}>
-          SWOT Analysis
-        </Typography>
-        {swotFields.map(swot => (
-          <div key={swot.id} style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-            <TextField
-              fullWidth
-              disabled={!isEditable}
-              label={`SWOT ${swot.id}`}
-              value={swot.text}
-              onChange={e => handleSwotChange(swot.id, e.target.value)}
-            />
-            {isEditable && (
-              <Button variant='contained' color='secondary' onClick={() => handleRemoveSwot(swot.id)}>
-                Remove
-              </Button>
-            )}
-          </div>
-        ))}
-        {isEditable && (
-          <Button variant='contained' color='primary' onClick={handleAddSwot}>
-            Add SWOT
-          </Button>
-        )}
-      </SectionContainer>
+      {Object.keys(swot).map(category => (
+        <SectionContainer key={category}>
+          <Typography variant='h6' style={{ marginBottom: '10px' }}>
+            {category}
+          </Typography>
+          {swot[category].map(item => (
+            <div key={item.id} style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+              <Select
+                disabled={!isEditable}
+                value={item.type}
+                onChange={e => handleSwotChange(category, item.id, 'type', e.target.value)}
+              >
+                <MenuItem value='Internal'>Internal</MenuItem>
+                <MenuItem value='External'>External</MenuItem>
+              </Select>
+              <TextField
+                fullWidth
+                disabled={!isEditable}
+                label={`${category} ${item.id}`}
+                value={item.text}
+                onChange={e => handleSwotChange(category, item.id, 'text', e.target.value)}
+              />
+              {isEditable && (
+                <Button variant='contained' color='secondary' onClick={() => handleRemoveSwot(category, item.id)}>
+                  Remove
+                </Button>
+              )}
+            </div>
+          ))}
+          {isEditable && (
+            <Button variant='contained' color='primary' onClick={() => handleAddSwot(category)}>
+              Add {category}
+            </Button>
+          )}
+        </SectionContainer>
+      ))}
 
       {/* Interested Parties Section */}
       <SectionContainer>

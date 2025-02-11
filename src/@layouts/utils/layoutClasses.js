@@ -21,10 +21,6 @@ export const verticalLayoutClasses = {
   footerFixed: 'ts-vertical-layout-footer-fixed',
   footerDetached: 'ts-vertical-layout-footer-detached',
   footerAttached: 'ts-vertical-layout-footer-attached',
-  footerContentWrapper: 'ts-vertical-layout-footer-content-wrapper',
-  footerContent: 'ts-vertical-layout-footer-content',
-  footerContentCompact: 'ts-vertical-layout-footer-content-compact',
-  footerContentWide: 'ts-vertical-layout-footer-content-wide'
 }
 
 // Classes for horizontal layout
@@ -44,13 +40,6 @@ export const horizontalLayoutClasses = {
   content: 'ts-horizontal-layout-content',
   contentCompact: 'ts-horizontal-layout-content-compact',
   contentWide: 'ts-horizontal-layout-content-wide',
-  footer: 'ts-horizontal-layout-footer',
-  footerStatic: 'ts-horizontal-layout-footer-static',
-  footerFixed: 'ts-horizontal-layout-footer-fixed',
-  footerContentWrapper: 'ts-horizontal-layout-footer-content-wrapper',
-  footerContent: 'ts-horizontal-layout-footer-content',
-  footerContentCompact: 'ts-horizontal-layout-footer-content-compact',
-  footerContentWide: 'ts-horizontal-layout-footer-content-wide'
 }
 
 // Classes for blank layout

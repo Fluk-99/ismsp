@@ -8,7 +8,7 @@ export default function Page() {
       {/* Hero Section */}
       <header
         style={{
-          background: "linear-gradient(to right, #1e88e5, #64b5f6)",
+          background: "linear-gradient(to right, #003366, #0066cc)",
           color: "#fff",
           padding: "50px 20px",
           textAlign: "center",
