@@ -1,49 +1,52 @@
 'use client'
-
+//ตัวอย่าง
 import { useEffect, useState } from 'react'
 import { TextField, Select, MenuItem, Button, Typography, Box, CircularProgress } from '@mui/material'
 import { toast, ToastContainer } from 'react-toastify'
+import CancelIcon from '@mui/icons-material/Cancel'
 import 'react-toastify/dist/ReactToastify.css'
-//api
+//Get api
+//-----------------------------------------------------url------------------------------------
 const API_URL = 'http://192.168.0.119:3000/api/settings/organization'
-const CREATE_API_URL = 'http://192.168.0.119:3000/api/settings/organization/create'
-//const Delete_API_URL = `http://192.168.0.119:3000/api/settings/organization/${orgId}`;
-// const TEST = "http://192.168.0.119:3000/api/settings/organization/:id";
 
 const Organization_C = () => {
+  //---------------------------------------------------------
   const [organizations, setOrganizations] = useState([])
+  //---------------------------------------------------------
   const [loading, setLoading] = useState(true)
   const [canAdd, setCanAdd] = useState(true)
 
+  useEffect(() => {
+    fetchOrganizations()
+  }, [])
+
+  // ฟังก์ชันดึงข้อมูลจาก API
   const fetchOrganizations = async () => {
     try {
-        const response = await fetch(API_URL);
-        if (!response.ok) throw new Error("Failed to fetch data");
+      const response = await fetch(API_URL)
+      if (!response.ok) throw new Error('Failed to fetch data')
 
-        const data = await response.json();
-        console.log("✅ API Response Data:", data);
-
-        const formattedData = data.data.map((org) => ({
-            id: org._id,
-            orgId: org.orgId,
-            companyName: org.name,
-            companyType: org.businessType,
-            isEditable: false,
-            isSaved: true,
-        }));
-
-        setOrganizations(formattedData);
+      const data = await response.json()
+      //body--------------------------------------------------------------------- ดึงค่ามาใช้
+      setOrganizations(
+        data.data.map(org => ({
+          id: org._id, // ใช้ `_id` จาก MongoDB
+          orgId: org.orgId,
+          companyName: org.name,
+          companyType: org.businessType,
+          isEditable: false,
+          isSaved: true
+        }))
+      )
+      //-------------------------------------------------------------------------
     } catch (error) {
-        console.error("Error fetching organizations:", error);
-        toast.error("Failed to fetch organizations.");
+      toast.error('Failed to fetch organizations.')
+    } finally {
+      setLoading(false)
     }
-};
+  }
 
-// ✅ ตรวจสอบว่า `fetchOrganizations` มีอยู่และเรียกใช้ได้
-useEffect(() => {
-    fetchOrganizations();
-}, []);
-
+  // ประเภทของบริษัทที่รองรับ
   const companyTypes = [
     'Corporation',
     'Partnership',
@@ -65,114 +68,87 @@ useEffect(() => {
     'Joint Venture'
   ]
 
+  // ฟังก์ชันอัปเดต State เมื่อมีการเปลี่ยนแปลงค่า
+  const handleChange = (id, field, value) => {
+    setOrganizations(prev => prev.map(org => (org.id === id ? { ...org, [field]: value } : org)))
+  }
+
+  // ฟังก์ชันเปิด/ปิดโหมดแก้ไข
   const handleEditToggle = id => {
     setOrganizations(prev =>
       prev.map(org => (org.id === id ? { ...org, isEditable: !org.isEditable, isSaved: false } : org))
     )
     setCanAdd(true)
   }
-
+  //------------------------------------------------------------------------------post หรือ save    // สร้าง
   const handleSaveToAPI = async id => {
     const org = organizations.find(org => org.id === id)
 
-    if (!org || org.companyName.trim() === '' || org.companyType === '') {
-      toast.error('Please fill in all fields before saving!', { position: 'top-right', autoClose: 3000 })
+    if (!org || !org.companyName.trim() || !org.companyType) {
+      toast.error('Please fill in all fields before saving!')
       return
     }
-
+    // url + /create
     try {
-      const response = await fetch(CREATE_API_URL, {
+      const response = await fetch(`${API_URL}/create`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: org.companyName,
           businessType: org.companyType
         })
       })
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`)
-      }
+      if (!response.ok) throw new Error(`Failed to save organization (${response.status})`)
 
-      toast.success('Organization saved successfully!', { position: 'top-right', autoClose: 3000 })
-
-      setOrganizations(prev => prev.map(org => (org.id === id ? { ...org, isEditable: false, isSaved: true } : org)))
-      setCanAdd(false)
+      toast.success('Organization saved successfully!')
+      fetchOrganizations() // รีโหลดข้อมูลหลังจากบันทึก
+      setCanAdd(true)
     } catch (error) {
-      console.error('Error saving organization:', error)
-      toast.error('Failed to save organization. Please try again.')
+      toast.error('Failed to save organization.')
     }
   }
-
+  //------------------------------------------------------------------------------new
+  // ฟังก์ชันเพิ่ม Organization ใหม่
   const handleAddOrganization = () => {
-    const newOrg = {
-      id: Date.now().toString(),
-      companyName: '',
-      companyType: '',
-      isEditable: true,
-      isSaved: false
-    }
-    setOrganizations(prev => [...prev, newOrg])
+    setOrganizations(prev => [
+      ...prev,
+      {
+        id: `temp-${Date.now()}`,
+        companyName: '',
+        companyType: '',
+        isEditable: true,
+        isSaved: false
+      }
+    ])
     setCanAdd(false)
   }
-//pete
-const handleDeleteOrganization = async (orgId) => {
-  console.log("Debugging: orgId before delete:", orgId);
-  try {
-      if (!orgId) {
-          throw new Error("Invalid organization ID.");
-      }
 
-      console.log(`Attempting to delete organization with ID: ${orgId}`);
-
-      const response = await fetch(`http://192.168.0.119:3000/api/settings/organization/${orgId}`, {
-          method: "DELETE",
-          headers: {
-              "Content-Type": "application/json",
-          },
-      });
-
-      console.log(`Response status: ${response.status}`);
-
-      const data = await response.json(); // ✅ กำหนดค่าตัวแปร `data`
-
-      console.log("✅ API Response Data:", data);
-
-      if (!response.ok) {
-          console.error("API Error:", data.message);
-          throw new Error(`Failed to delete organization. Status: ${response.status}, Error: ${data.message}`);
-      }
-
-      console.log("Delete Success:", data);
-
-      // ✅ อัปเดต UI โดยการกรองเอา org ที่ลบออกจาก State
-      setOrganizations((prev) => prev.filter((org) => org.orgId !== orgId));
-
-      toast.success(data.message || "Organization deleted successfully!", {
-          position: "top-right",
-          autoClose: 3000,
-      });
-      await fetchOrganizations();
-
-  } catch (error) {
-      console.error("Error deleting organization:", error);
-      toast.error(error.message || "Failed to delete organization. Please try again.");
+  // ยกเลิกการเพิ่ม Organization
+  const handleCancelAdd = () => {
+    setOrganizations(prev => prev.filter(org => !org.id.startsWith('temp-')))
+    setCanAdd(true)
   }
-};
 
+  // ฟังก์ชันลบ Organization
+  const handleDeleteOrganization = async orgId => {
+    try {
+      const response = await fetch(`${API_URL}/${orgId}`, { method: 'DELETE' })
+      if (!response.ok) throw new Error(`Failed to delete organization (${response.status})`)
 
-
-
-/////////////////////////
+      toast.success('✅ Organization deleted successfully!')
+      await fetchOrganizations()
+    } catch (error) {
+      toast.error('Failed to delete organization.')
+    }
+  }
 
   return (
     <Box sx={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
       <ToastContainer />
 
       <Typography variant='h4' align='center' gutterBottom>
-        Organization Information
+        Organization Management
       </Typography>
 
       {loading ? (
@@ -181,16 +157,7 @@ const handleDeleteOrganization = async (orgId) => {
         </Box>
       ) : (
         organizations.map(org => (
-          <Box
-            key={org.id}
-            sx={{
-              display: 'flex',
-              gap: '10px',
-              marginBottom: '20px',
-              marginTop: '30px',
-              alignItems: 'center'
-            }}
-          >
+          <Box key={org.id} sx={{ display: 'flex', gap: '10px', marginBottom: '20px', alignItems: 'center' }}>
             <TextField
               fullWidth
               label='Organization Name'
@@ -212,41 +179,36 @@ const handleDeleteOrganization = async (orgId) => {
               ))}
             </Select>
 
-            <Button
-              variant='contained'
-              color='secondary'
-              onClick={() => handleEditToggle(org.id)}
-              sx={{ marginRight: '10px' }}
-            >
+            <Button variant='contained' color='secondary' onClick={() => handleEditToggle(org.id)}>
               {org.isEditable ? 'Cancel' : 'Edit'}
             </Button>
 
-            {
-              <Button
-                variant='contained'
-                color='primary'
-                onClick={() => handleSaveToAPI(org.id)}
-                disabled={!org.isEditable || org.companyName.trim() === '' || org.companyType === ''}
-                sx={{ marginRight: '10px' }}
-              >
-                Save
-              </Button>
-            }
-
             <Button
-            variant='contained'
-            color='error'
-            onClick={() => handleDeleteOrganization(org.orgId)}>
+              variant='contained'
+              color='primary'
+              onClick={() => handleSaveToAPI(org.id)}
+              disabled={!org.isEditable || !org.companyName.trim() || !org.companyType}
+            >
+              Save
+            </Button>
+
+            <Button variant='contained' color='error' onClick={() => handleDeleteOrganization(org.orgId)}>
               Delete
             </Button>
           </Box>
         ))
       )}
 
-      {canAdd && (
-        <Box sx={{ textAlign: "center", marginTop: "20px" }}>
-          <Button variant="contained" color="success" onClick={handleAddOrganization}>
+      {canAdd ? (
+        <Box sx={{ textAlign: 'center', marginTop: '20px' }}>
+          <Button variant='contained' color='success' onClick={handleAddOrganization}>
             Add Organization
+          </Button>
+        </Box>
+      ) : (
+        <Box sx={{ textAlign: 'center', marginTop: '20px' }}>
+          <Button variant='contained' color='error' startIcon={<CancelIcon />} onClick={handleCancelAdd}>
+            Cancel Add
           </Button>
         </Box>
       )}

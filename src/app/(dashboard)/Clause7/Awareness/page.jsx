@@ -1,226 +1,223 @@
-"use client";
+'use client'
 
-import { useState } from "react";
+import { useState, useEffect } from 'react'
+import { Box, Button, Grid, Paper, TextField, Typography, IconButton, Divider } from '@mui/material'
+import CloudUploadIcon from '@mui/icons-material/CloudUpload'
+import AddCircleOutline from '@mui/icons-material/AddCircleOutline'
+import RemoveCircleOutline from '@mui/icons-material/RemoveCircleOutline'
+import DeleteIcon from '@mui/icons-material/Delete'
+
+const API_BASE_URL = 'http://192.168.0.119:3000/api/7SUPP/awareness'
 
 const Awareness = () => {
-  const [awarenessFiles, setAwarenessFiles] = useState({
-    trainingTopics: [],
-    securityAwareness: [],
-    trainingPlans: [],
-    responseGuidelines: [],
-    alertDocuments: [],
-  });
+  const [employees, setEmployees] = useState([])
+  const [files, setFiles] = useState({
+    exam: [],
+    incident: [],
+    threat: []
+  })
 
-  const [employees, setEmployees] = useState([]);
-  const [isEditingGlobal, setIsEditingGlobal] = useState(true);
+  useEffect(() => {
+    fetchEmployees()
+    fetchFiles()
+  }, [])
 
-  const addFile = (category, file) => {
-    setAwarenessFiles((prev) => ({
-      ...prev,
-      [category]: [...prev[category], file],
-    }));
-  };
+  // 🚀 ดึงข้อมูลพนักงานจาก API
+  const fetchEmployees = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/training`)
+      if (!response.ok) throw new Error(`Failed to fetch employee training data: ${response.status}`)
+      const data = await response.json()
+      setEmployees(Array.isArray(data.data) ? data.data : [])
+    } catch (error) {
+      console.error('Error fetching employees:', error)
+      setEmployees([])
+    }
+  }
 
-  const removeFile = (category, index) => {
-    setAwarenessFiles((prev) => ({
-      ...prev,
-      [category]: prev[category].filter((_, i) => i !== index),
-    }));
-  };
+  // ดึงไฟล์ที่อัปโหลดจาก API
+  const fetchFiles = async () => {
+    try {
+      const fileTypes = ['exam', 'incident', 'threat']
+      let newFiles = {}
 
+      for (let type of fileTypes) {
+        const response = await fetch(`${API_BASE_URL}/${type}`)
+        if (response.ok) {
+          const data = await response.json()
+          newFiles[type] = data.files || []
+        }
+      }
+
+      setFiles(newFiles)
+    } catch (error) {
+      console.error('Failed to fetch files:', error)
+    }
+  }
+
+  // เพิ่มพนักงานใหม่
   const addEmployee = () => {
-    setEmployees((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        name: "",
-        organizationTraining: "",
-        pastISMSTraining: "",
-        trainingDate: "",
-        isEditing: true,
-      },
-    ]);
-  };
+    setEmployees([...employees, { id: Date.now(), name: '', trainingTitle: '', ismsTraining: '', trainingDate: '' }])
+  }
 
-  const updateEmployee = (id, key, value) => {
-    setEmployees((prev) =>
-      prev.map((emp) => (emp.id === id ? { ...emp, [key]: value } : emp))
-    );
-  };
+  // ลบพนักงานผ่าน API
+  const removeEmployee = async id => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/training/${id}`, { method: 'DELETE' })
+      if (response.ok) {
+        setEmployees(employees.filter(emp => emp.id !== id))
+      } else {
+        console.error(`Failed to delete employee: ${response.status}`)
+      }
+    } catch (error) {
+      console.error('Failed to delete employee', error)
+    }
+  }
 
-  const toggleEditEmployee = (id) => {
-    setEmployees((prev) =>
-      prev.map((emp) =>
-        emp.id === id ? { ...emp, isEditing: !emp.isEditing } : emp
-      )
-    );
-  };
+  // บันทึกข้อมูลพนักงานใหม่ไปยัง API
+  const saveEmployee = async employee => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/training/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(employee)
+      })
+      if (response.ok) {
+        fetchEmployees()
+      } else {
+        console.error('Failed to save employee')
+      }
+    } catch (error) {
+      console.error('Error saving employee:', error)
+    }
+  }
 
-  const removeEmployee = (id) => {
-    setEmployees((prev) => prev.filter((emp) => emp.id !== id));
-  };
+  // อัปโหลดไฟล์ไปยัง API
+  const uploadFile = async (category, file) => {
+    const formData = new FormData()
+    formData.append('type', category)
+    formData.append('file', file)
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/file`, { method: 'POST', body: formData })
+      if (response.ok) {
+        fetchFiles()
+      } else {
+        console.error('File upload failed:', response.statusText)
+      }
+    } catch (error) {
+      console.error('Failed to upload file', error)
+    }
+  }
 
   return (
-    <div className="p-10 bg-gray-100 min-h-screen">
-      {/* ปุ่ม Save & Edit สำหรับทั้งหน้า */}
-      <div className="flex justify-end mb-4">
-        <button
-          className={`px-4 py-2 rounded-md shadow transition ${
-            isEditingGlobal
-              ? "bg-blue-600 text-white hover:bg-blue-700"
-              : "bg-yellow-500 text-white hover:bg-yellow-600"
-          }`}
-          onClick={() => setIsEditingGlobal(!isEditingGlobal)}
-        >
-          {isEditingGlobal ? "Save All" : "Edit All"}
-        </button>
-      </div>
+    <Box p={4} bgcolor='white' boxShadow={3} borderRadius={2}>
+      <Typography variant='h4' align='center' gutterBottom fontWeight='bold'>
+        Clause 7: Support
+      </Typography>
+      <Typography variant='h6' fontWeight='bold' gutterBottom>
+        ความตระหนักรู้ (Awareness)
+      </Typography>
 
-      <h1 className="text-3xl font-bold text-center text-gray-800 mb-6">
-        Clause 7: Awareness
-      </h1>
+      {/* File Upload Sections */}
+      {['exam', 'incident', 'threat'].map(category => (
+        <FileUploadSection
+          key={category}
+          category={category}
+          label={category}
+          uploadFile={uploadFile}
+          files={files[category]}
+        />
+      ))}
 
-      <div className="space-y-8">
-        {/* หมวดการอัปโหลดไฟล์ */}
-        {Object.keys(awarenessFiles).map((category, index) => (
-          <div
-            key={index}
-            className="bg-white p-6 rounded-lg shadow-md border-2 border-gray-300"
-          >
-            <h2 className="font-semibold text-lg text-gray-700 mb-4">
-              {getCategoryLabel(category)}
-            </h2>
-
-            {awarenessFiles[category].map((file, idx) => (
-              <FileUploadRow
-                key={idx}
-                uploadedFile={file}
-                disabled={!isEditingGlobal}
-                onRemove={() => removeFile(category, idx)}
-              />
-            ))}
-
-            <button
-              className="px-4 py-1 bg-gray-600 text-white rounded-md shadow hover:bg-gray-700 transition mt-4"
-              onClick={() => addFile(category, "Uploaded File")}
-              disabled={!isEditingGlobal}
-            >
-              Add
-            </button>
-          </div>
-        ))}
-
-        {/* ส่วนของข้อมูลพนักงาน */}
-        <div className="bg-white p-6 rounded-lg shadow-md border-2 border-gray-300">
-          <h2 className="font-semibold text-lg text-gray-700 mb-4">
-            ข้อมูลพนักงาน
-          </h2>
-
-          {employees.map((emp) => (
-            <div key={emp.id} className="border p-4 rounded-lg mb-4 relative">
-              <button
-                className={`absolute top-2 right-10 px-3 py-1 rounded-md shadow transition ${
-                  emp.isEditing
-                    ? "bg-blue-600 text-white hover:bg-blue-700"
-                    : "bg-yellow-500 text-white hover:bg-yellow-600"
-                }`}
-                onClick={() => toggleEditEmployee(emp.id)}
-              >
-                {emp.isEditing ? "Save" : "Edit"}
-              </button>
-
-              <button
-                className="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600"
-                onClick={() => removeEmployee(emp.id)}
-              >
-                Remove
-              </button>
-
-              <div className="grid grid-cols-2 gap-4 mb-3">
-                <input
-                  type="text"
-                  value={emp.name}
-                  disabled={!emp.isEditing}
-                  onChange={(e) =>
-                    updateEmployee(emp.id, "name", e.target.value)
-                  }
-                  className="border p-2 rounded-md bg-gray-50"
-                  placeholder="ชื่อพนักงาน"
-                />
-                <input
-                  type="text"
-                  value={emp.organizationTraining}
-                  disabled={!emp.isEditing}
-                  onChange={(e) =>
-                    updateEmployee(emp.id, "organizationTraining", e.target.value)
-                  }
-                  className="border p-2 rounded-md bg-gray-50"
-                  placeholder="การอบรมที่องค์กรจัดให้พนักงาน"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <input
-                  type="text"
-                  value={emp.pastISMSTraining}
-                  disabled={!emp.isEditing}
-                  onChange={(e) =>
-                    updateEmployee(emp.id, "pastISMSTraining", e.target.value)
-                  }
-                  className="border p-2 rounded-md bg-gray-50"
-                  placeholder="การอบรมด้าน ISMS ที่พนักงานเคยเข้าร่วม"
-                />
-                <input
-                  type="date"
-                  value={emp.trainingDate}
-                  disabled={!emp.isEditing}
-                  onChange={(e) =>
-                    updateEmployee(emp.id, "trainingDate", e.target.value)
-                  }
-                  className="border p-2 rounded-md bg-gray-50"
-                  placeholder="วันที่อบรม"
-                />
-              </div>
-            </div>
-          ))}
-
-          <button
-            className="px-4 py-1 bg-purple-600 text-white rounded-md shadow hover:bg-purple-700 transition"
-            onClick={addEmployee}
-          >
-            Add Employee
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ฟังก์ชันช่วยแปลงชื่อ category เป็นข้อความแสดงผล
-function getCategoryLabel(category) {
-  const labels = {
-    trainingTopics: "หัวข้อการสอน",
-    securityAwareness: "Security Awareness (คะแนนสอบ)",
-    trainingPlans: "แผนฝึกอบรมเกี่ยวกับ Security Awareness",
-    responseGuidelines: "แนวทางปฏิบัติเมื่อต้องเผชิญเหตุการณ์ผิดปกติ",
-    alertDocuments: "เอกสารแจ้งเตือนภายในเกี่ยวกับภัยคุกคาม",
-  };
-  return labels[category] || category;
+      {/* Employee Section */}
+      <EmployeeSection
+        employees={employees}
+        addEmployee={addEmployee}
+        saveEmployee={saveEmployee}
+        removeEmployee={removeEmployee}
+      />
+    </Box>
+  )
 }
 
-// Component อัปโหลดไฟล์
-function FileUploadRow({ uploadedFile, onRemove, disabled }) {
-  return (
-    <div className="mb-3 flex items-center space-x-3">
-      <input type="file" className="border p-2 rounded-md bg-gray-50 flex-grow" disabled={disabled} />
-      {uploadedFile && <span className="text-gray-600">{uploadedFile}</span>}
-      {uploadedFile && (
-        <button className="px-3 py-1 bg-gray-600 text-white rounded-md shadow hover:bg-gray-700 transition" onClick={onRemove}>
-          Remove
-        </button>
-      )}
-    </div>
-  );
-}
+const FileUploadSection = ({ category, label, uploadFile, files }) => (
+  <Paper elevation={3} sx={{ p: 3, borderRadius: 2, mb: 2 }}>
+    <Typography variant='h6' fontWeight='bold'>
+      {label}
+    </Typography>
+    <Box display='flex' alignItems='center' gap={2} mt={1}>
+      <Button variant='outlined' component='label' startIcon={<CloudUploadIcon />}>
+        Upload Files
+        <input type='file' hidden onChange={e => uploadFile(category, e.target.files[0])} />
+      </Button>
+    </Box>
+    {files &&
+      files.length > 0 &&
+      files.map((file, index) => (
+        <Typography key={index} sx={{ mt: 1, color: 'gray' }}>
+          {file.filePath}
+        </Typography>
+      ))}
+  </Paper>
+)
 
-export default Awareness;
+const EmployeeSection = ({ employees, addEmployee, saveEmployee, removeEmployee }) => (
+  <Paper elevation={3} sx={{ p: 3, borderRadius: 2, mt: 3 }}>
+    <Typography variant='h6' fontWeight='bold' gutterBottom>
+      พนักงานที่เข้าร่วมการอบรม
+    </Typography>
+    <Divider sx={{ mb: 2 }} />
+    {employees.map(emp => (
+      <Grid key={emp.id} container spacing={2} sx={{ mb: 2 }}>
+        <Grid item xs={3}>
+          <TextField fullWidth label='ชื่อพนักงาน' value={emp.name} onChange={e => (emp.name = e.target.value)} />
+        </Grid>
+        <Grid item xs={3}>
+          <TextField
+            fullWidth
+            label='การอบรมที่องค์กรจัดให้'
+            value={emp.trainingTitle}
+            onChange={e => (emp.trainingTitle = e.target.value)}
+          />
+        </Grid>
+        <Grid item xs={3}>
+          <TextField
+            fullWidth
+            label='การอบรมด้าน ISMS'
+            value={emp.ismsTraining}
+            onChange={e => (emp.ismsTraining = e.target.value)}
+          />
+        </Grid>
+        <Grid item xs={2}>
+          <TextField
+            fullWidth
+            type='date'
+            label='วันที่อบรม'
+            value={emp.trainingDate}
+            onChange={e => (emp.trainingDate = e.target.value)}
+          />
+        </Grid>
+        <Grid item xs={1} display='flex' alignItems='center' justifyContent='center'>
+          <IconButton color='error' onClick={() => removeEmployee(emp.id)}>
+            <DeleteIcon />
+          </IconButton>
+        </Grid>
+      </Grid>
+    ))}
+    <Button variant='contained' color='primary' startIcon={<AddCircleOutline />} onClick={addEmployee}>
+      Add Employee
+    </Button>
+    <Button
+      variant='contained'
+      color='secondary'
+      startIcon={<AddCircleOutline />}
+      onClick={() => saveEmployee(employees[employees.length - 1])}
+      sx={{ ml: 2 }}
+    >
+      Save Employee
+    </Button>
+  </Paper>
+)
+
+export default Awareness

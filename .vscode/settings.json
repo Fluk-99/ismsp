@@ -49,5 +49,8 @@
     "customizer",
     "iconify",
     "tanstack"
-  ]
+  ],
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "ms-vsliveshare.vsliveshare"
+  }
 }

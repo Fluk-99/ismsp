@@ -46,7 +46,6 @@ const CustomThemeProvider = props => {
       currentMode = settings.mode
     }
   }
-
   // Merge the primary color scheme override with the core theme
   const theme = useMemo(() => {
     const newTheme = {

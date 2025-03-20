@@ -37,6 +37,7 @@ const theme = (settings, mode, direction) => {
       darkShadow: '19 17 32'
     }
   }
+  console.log('Theme Primary Main:', theme.palette.primary.main);
 }
 
 export default theme

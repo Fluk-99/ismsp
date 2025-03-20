@@ -1,137 +1,153 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { TextField, Button, Typography, Box, CircularProgress } from '@mui/material'
+import { TextField, Button, Typography, Box, CircularProgress, IconButton } from '@mui/material'
 import { toast, ToastContainer } from 'react-toastify'
+import DeleteIcon from '@mui/icons-material/Delete'
+import AddIcon from '@mui/icons-material/Add'
 import 'react-toastify/dist/ReactToastify.css'
 
-// API
-const API_URL = 'http://192.168.0.119:3000/api/settings/department'
-const CREATE_API_URL = 'http://192.168.0.119:3000/api/settings/department/create'
-const DELETE_API_URL = 'http://192.168.0.119:3000/api/settings/department'
+const BASE_URL = 'http://192.168.0.119:3000/api/settings/department'
 
 const Department_C = () => {
   const [departments, setDepartments] = useState([])
   const [loading, setLoading] = useState(true)
-  const [canAdd, setCanAdd] = useState(true)
+  const [editingId, setEditingId] = useState(null)
 
   useEffect(() => {
-    const fetchDepartments = async () => {
-      try {
-        const response = await fetch(API_URL)
-        if (!response.ok) throw new Error('Failed to fetch data')
-        const data = await response.json()
-        const formattedData = data.data.map(dept => ({
-          id: dept.deptId,
-          departmentName: dept.name,
-          isEditable: false,
-          isSaved: true
-        }))
-        setDepartments(formattedData)
-      } catch (error) {
-        console.error('Error fetching departments:', error)
-        toast.error('Failed to fetch departments.')
-      } finally {
-        setLoading(false)
-      }
-    }
-
     fetchDepartments()
   }, [])
 
-  const handleEditToggle = id => {
-    setDepartments(prev =>
-      prev.map(dept => (dept.id === id ? { ...dept, isEditable: !dept.isEditable, isSaved: false } : dept))
-    )
-    setCanAdd(true)
+  const fetchDepartments = async () => {
+    try {
+      const response = await fetch(BASE_URL)
+      if (!response.ok) throw new Error('Failed to fetch departments')
+
+      const data = await response.json()
+      setDepartments(
+        data.data.map(dept => ({
+          deptId: dept.deptId,
+          departmentName: dept.name,
+          isEditable: false,
+          subDepartments: dept.subDepartments || []
+        }))
+      )
+    } catch (error) {
+      toast.error('Failed to fetch departments.')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleSaveToAPI = async id => {
-    const dept = departments.find(dept => dept.id === id)
+  const handleEditToggle = deptId => {
+    setEditingId(deptId)
+    setDepartments(prev =>
+      prev.map(dept => (dept.deptId === deptId ? { ...dept, isEditable: !dept.isEditable } : dept))
+    )
+  }
 
-    if (!dept || dept.departmentName.trim() === '') {
-      toast.error('Please fill in all fields before saving!', { position: 'top-right', autoClose: 3000 })
+  const handleSaveToAPI = async deptId => {
+    const dept = departments.find(dept => dept.deptId === deptId)
+    if (!dept || !dept.departmentName.trim()) {
+      toast.error('Department name cannot be empty!')
       return
     }
 
     try {
-      const response = await fetch(CREATE_API_URL, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+      let url = `${BASE_URL}/${deptId}`
+      let method = 'PUT'
+
+      // ถ้าเป็น Department ใหม่ ให้ใช้ POST /create
+      if (deptId.startsWith('DEPT-')) {
+        url = `${BASE_URL}/create`
+        method = 'POST'
+      }
+
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          name: dept.departmentName
+          name: dept.departmentName.trim(),
+          subDepartments: dept.subDepartments
         })
       })
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`)
-      }
+      if (!response.ok) throw new Error('Failed to save department.')
 
-      toast.success('Department saved successfully!', { position: 'top-right', autoClose: 3000 })
-
-      setDepartments(prev => prev.map(dept => (dept.id === id ? { ...dept, isEditable: false, isSaved: true } : dept)))
-      setCanAdd(false)
+      toast.success('✅ Department saved successfully!')
+      setEditingId(null)
+      fetchDepartments()
     } catch (error) {
-      console.error('Error saving department:', error)
-      toast.error('Failed to save department. Please try again.')
+      toast.error(error.message || 'Failed to save department.')
     }
   }
 
+  // ✅ ฟังก์ชันเพิ่ม Department
   const handleAddDepartment = () => {
     const newDept = {
-      id: Date.now().toString(),
+      deptId: `DEPT-${Date.now()}`,
       departmentName: '',
       isEditable: true,
-      isSaved: false
+      subDepartments: []
     }
+
     setDepartments(prev => [...prev, newDept])
-    setCanAdd(false)
+    setEditingId(newDept.deptId)
   }
 
-  const handleDeleteDepartment = async (deptId) => {
+  // ✅ ฟังก์ชันลบ Department
+  const handleDeleteDepartment = async deptId => {
     try {
-      if (!deptId) {
-        throw new Error("Invalid department ID.");
-      }
+      const response = await fetch(`${BASE_URL}/${deptId}`, { method: 'DELETE' })
+      if (!response.ok) throw new Error('Failed to delete department.')
 
-      console.log(`Deleting department with ID: ${deptId}`); // ✅ Debugging Log
-
-      const response = await fetch(`${DELETE_API_URL}/${deptId}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      console.log(`Response status: ${response.status}`); // ✅ Debugging Log
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("API Error:", errorText);
-        throw new Error(`Failed to delete department. Status: ${response.status}, Error: ${errorText}`);
-      }
-
-      const result = await response.json();
-      console.log("Delete Success:", result);
-
-      setDepartments((prev) => prev.filter((dept) => dept.id !== deptId));
-      toast.success(result.message || "Department deleted successfully!", {
-        position: "top-right",
-        autoClose: 3000,
-      });
-
+      toast.success('✅ Department deleted successfully!')
+      setDepartments(prev => prev.filter(dept => dept.deptId !== deptId))
     } catch (error) {
-      console.error("Error deleting department:", error);
-      toast.error(error.message || "Failed to delete department. Please try again.");
+      toast.error(error.message || 'Failed to delete department.')
     }
-  };
+  }
+
+  const handleAddSubDepartment = deptId => {
+    setDepartments(prev =>
+      prev.map(dept =>
+        dept.deptId === deptId
+          ? {
+              ...dept,
+              subDepartments: [...dept.subDepartments, { name: '', subDeptId: `SUB-${Date.now()}` }],
+              isEditable: true
+            }
+          : dept
+      )
+    )
+
+    setEditingId(deptId)
+  }
+
+  const handleDeleteSubDepartment = async (deptId, subDeptId) => {
+    try {
+      const response = await fetch(`${BASE_URL}/${deptId}/sub-department/${subDeptId}`, {
+        method: 'DELETE'
+      })
+
+      if (!response.ok) throw new Error('Failed to delete sub-department.')
+
+      toast.success('✅ Sub-department deleted successfully!')
+      setDepartments(prev =>
+        prev.map(dept =>
+          dept.deptId === deptId
+            ? { ...dept, subDepartments: dept.subDepartments.filter(sub => sub.subDeptId !== subDeptId) }
+            : dept
+        )
+      )
+    } catch (error) {
+      toast.error(error.message || 'Failed to delete sub-department.')
+    }
+  }
 
   return (
     <Box sx={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
       <ToastContainer />
-
       <Typography variant='h4' align='center' gutterBottom>
         Department Management
       </Typography>
@@ -142,49 +158,77 @@ const Department_C = () => {
         </Box>
       ) : (
         departments.map(dept => (
-          <Box
-            key={dept.id}
-            sx={{
-              display: 'flex',
-              gap: '10px',
-              marginBottom: '20px',
-              marginTop: '30px',
-              alignItems: 'center'
-            }}
-          >
+          <Box key={dept.deptId} sx={{ mb: 3, p: 2, border: '1px solid #ccc', borderRadius: '8px' }}>
             <TextField
               fullWidth
               label='Department Name'
               value={dept.departmentName}
               disabled={!dept.isEditable}
-              onChange={e => setDepartments(prev =>
-                prev.map(d => d.id === dept.id ? { ...d, departmentName: e.target.value } : d)
-              )}
+              onChange={e =>
+                setDepartments(prev =>
+                  prev.map(d => (d.deptId === dept.deptId ? { ...d, departmentName: e.target.value } : d))
+                )
+              }
             />
 
-            <Button
-              variant='contained'
-              color='secondary'
-              onClick={() => handleEditToggle(dept.id)}
-              sx={{ marginRight: '10px' }}
-            >
-              {dept.isEditable ? 'Cancel' : 'Edit'}
+            {dept.subDepartments.map(sub => (
+              <Box key={sub.subDeptId} sx={{ display: 'flex', alignItems: 'center', mt: 2 }}>
+                <TextField
+                  fullWidth
+                  label='Sub-Department Name'
+                  value={sub.name}
+                  onChange={e =>
+                    setDepartments(prev =>
+                      prev.map(d =>
+                        d.deptId === dept.deptId
+                          ? {
+                              ...d,
+                              subDepartments: d.subDepartments.map(s =>
+                                s.subDeptId === sub.subDeptId ? { ...s, name: e.target.value } : s
+                              )
+                            }
+                          : d
+                      )
+                    )
+                  }
+                />
+                <IconButton color='error' onClick={() => handleDeleteSubDepartment(dept.deptId, sub.subDeptId)}>
+                  <DeleteIcon />
+                </IconButton>
+              </Box>
+            ))}
+
+            <Button startIcon={<AddIcon />} onClick={() => handleAddSubDepartment(dept.deptId)}>
+              Add Sub-Department
             </Button>
 
-            <Button
-              variant='contained'
-              color='primary'
-              onClick={() => handleSaveToAPI(dept.id)}
-              disabled={!dept.isEditable || dept.departmentName.trim() === ''}
-              sx={{ marginRight: '10px' }}
-            >
-              Save
-            </Button>
+            {(dept.isEditable || editingId === dept.deptId) && (
+              <Button
+                variant='contained'
+                color='primary'
+                sx={{ mt: 2, ml: 1 }}
+                onClick={() => handleSaveToAPI(dept.deptId)}
+              >
+                Save
+              </Button>
+            )}
+
+            {!dept.isEditable && (
+              <Button
+                variant='contained'
+                color='secondary'
+                sx={{ mt: 2, ml: 1 }}
+                onClick={() => handleEditToggle(dept.deptId)}
+              >
+                Edit
+              </Button>
+            )}
 
             <Button
               variant='contained'
               color='error'
-              onClick={() => handleDeleteDepartment(dept.id)}
+              sx={{ mt: 2, ml: 1 }}
+              onClick={() => handleDeleteDepartment(dept.deptId)}
             >
               Delete
             </Button>
@@ -192,13 +236,11 @@ const Department_C = () => {
         ))
       )}
 
-      {canAdd && (
-        <Box sx={{ textAlign: "center", marginTop: "20px" }}>
-          <Button variant="contained" color="success" onClick={handleAddDepartment}>
-            Add Department
-          </Button>
-        </Box>
-      )}
+      <Box sx={{ textAlign: 'center', marginTop: '20px' }}>
+        <Button variant='contained' color='success' onClick={handleAddDepartment}>
+          Add Department
+        </Button>
+      </Box>
     </Box>
   )
 }

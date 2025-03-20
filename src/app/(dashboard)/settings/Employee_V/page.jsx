@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Typography, CircularProgress, Box, Button } from "@mui/material";
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Typography, CircularProgress, Box } from "@mui/material";
 import SpeedDial from "@mui/material/SpeedDial";
 import SpeedDialIcon from "@mui/material/SpeedDialIcon";
 import SpeedDialAction from "@mui/material/SpeedDialAction";
@@ -24,7 +24,17 @@ const Employee_V = () => {
         const response = await fetch("http://192.168.0.119:3000/api/settings/employee");
         if (!response.ok) throw new Error("Failed to fetch data");
         const data = await response.json();
-        setEmployees(data.data); // ใช้ `data.data` เพราะ JSON API ห่อข้อมูลใน key `data`
+
+        console.log("Fetched Employees:", data.data); // Debugging
+
+        // ✅ ใช้ชื่อ department และ subDepartment แทน ID
+        const processedEmployees = data.data.map(emp => ({
+          ...emp,
+          department: emp.department?.name || "N/A", // ✅ ใช้ชื่อแผนก
+          subDepartment: emp.subDepartment?.name || "N/A", // ✅ ใช้ชื่อหน่วยย่อย
+        }));
+
+        setEmployees(processedEmployees);
       } catch (error) {
         console.error("Error fetching employees:", error);
       } finally {
@@ -34,38 +44,6 @@ const Employee_V = () => {
 
     fetchEmployees();
   }, []);
-
-  const handleDeleteEmployee = async (employeeId) => {
-    try {
-      if (!employeeId) {
-        throw new Error("Invalid employee ID.");
-      }
-
-      console.log(`Deleting employee with ID: ${employeeId}`);
-
-      const response = await fetch(`http://192.168.0.119:3000/api/settings/employee/${employeeId}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      console.log(`Response status: ${response.status}`);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("API Error:", errorText);
-        throw new Error(`Failed to delete employee. Status: ${response.status}, Error: ${errorText}`);
-      }
-
-      const result = await response.json();
-      console.log("Delete Success:", result);
-
-      setEmployees((prev) => prev.filter((emp) => emp.employeeId !== employeeId));
-    } catch (error) {
-      console.error("Error deleting employee:", error);
-    }
-  };
 
   return (
     <Box sx={{ padding: "20px", maxWidth: "1100px", margin: "0 auto", position: "relative" }}>
@@ -81,12 +59,13 @@ const Employee_V = () => {
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
-              <TableRow style={{ backgroundColor: "#f5f5f5" }}>
+              <TableRow>
                 <TableCell>Number</TableCell>
                 <TableCell>ID</TableCell>
                 <TableCell>Employee Name</TableCell>
                 <TableCell>Position</TableCell>
-                <TableCell>Action</TableCell>
+                <TableCell>Department</TableCell> {/* ✅ เพิ่มคอลัมน์ Department */}
+                <TableCell>Sub-Department</TableCell> {/* ✅ เพิ่มคอลัมน์ Sub-Department */}
               </TableRow>
             </TableHead>
             <TableBody>
@@ -97,16 +76,14 @@ const Employee_V = () => {
                     <TableCell>{emp.employeeId}</TableCell>
                     <TableCell>{emp.name}</TableCell>
                     <TableCell>{emp.position}</TableCell>
-                    <TableCell>
-                      <Button variant="contained" color="error" onClick={() => handleDeleteEmployee(emp.employeeId)}>
-                        Remove
-                      </Button>
-                    </TableCell>
+                    <TableCell>{emp.department }</TableCell> {/* ✅ แก้ไขให้ตรวจสอบค่า */}
+                    <TableCell>{emp.subDepartment}</TableCell> {/* ✅ แก้ไขให้ตรวจสอบค่า */}
                   </TableRow>
+
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} align="center">
+                  <TableCell colSpan={6} align="center">
                     No Data Available
                   </TableCell>
                 </TableRow>
