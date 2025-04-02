@@ -10,170 +10,216 @@ import {
   Grid,
   IconButton,
   Box,
-  Typography
+  Typography,
+  FormControlLabel,
+  Radio,
+  RadioGroup,
+  Paper,
+  Divider,
+  Alert,
+  Snackbar,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Chip,
+  Checkbox,
+  CircularProgress,
+  Stack,
+  ToggleButton,
+  ToggleButtonGroup
 } from '@mui/material'
 import AddCircleOutline from '@mui/icons-material/AddCircleOutline'
 import RemoveCircleOutline from '@mui/icons-material/RemoveCircleOutline'
+import SearchIcon from '@mui/icons-material/Search'
+import FilterListIcon from '@mui/icons-material/FilterList'
+import VisibilityIcon from '@mui/icons-material/Visibility'
 
 export default function BoundaryManagement() {
-  const [soaOptions, setSoaOptions] = useState([])
+  const [allSOAs, setAllSOAs] = useState([])
   const [boundary, setBoundary] = useState({
-    inclusions: [],
-    exclusions: [],
+    soaItems: [],
     besidesSOA: ''
   })
+  const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [alert, setAlert] = useState({ open: false, message: '', severity: 'success' })
+  const [loading, setLoading] = useState(true)
+
+  // เพิ่มสถานะเพื่อเก็บ SOA IDs ที่เลือกแล้ว
+  const [selectedSOAs, setSelectedSOAs] = useState(new Set())
+
+  // เพิ่มตัวกรองสำหรับ Inclusion/Exclusion
+  const [inclusionFilter, setInclusionFilter] = useState('all')
 
   useEffect(() => {
     fetchSoaOptions()
     fetchBoundaries()
   }, [])
 
-  useEffect(() => {
-    console.log('Updated SOA Options:', soaOptions)
-    console.log('Updated Boundary:', boundary)
-  }, [soaOptions, boundary])
-
   const fetchSoaOptions = async () => {
     try {
+      setLoading(true)
       const response = await fetch('http://192.168.0.119:3000/api/settings/soa')
       const result = await response.json()
 
-      console.log('Updated SOA Options:', result.data)
+      console.log('SOA Options:', result.data)
 
       if (result.data && result.data.length > 0) {
-        setSoaOptions(result.data)
+        setAllSOAs(result.data)
       } else {
         console.warn('SOA Options API returned empty data.')
-        setSoaOptions([])
+        setAllSOAs([])
       }
     } catch (error) {
       console.error('Error fetching SOA Options:', error)
+      setAlert({
+        open: true,
+        message: 'เกิดข้อผิดพลาดในการโหลดข้อมูล SOA',
+        severity: 'error'
+      })
+    } finally {
+      setLoading(false)
     }
   }
 
   const fetchBoundaries = async () => {
     try {
+      setLoading(true)
       const response = await fetch('http://192.168.0.119:3000/api/4COTO/boundary/')
       const result = await response.json()
 
       console.log('📥 Fetched Boundary Data:', JSON.stringify(result, null, 2))
 
       if (result && Array.isArray(result) && result.length > 0) {
-        // ตรวจสอบโครงสร้างข้อมูลที่ได้จาก API แล้วแปลงให้ตรงกับที่ต้องการ
+        // ดึงข้อมูลขอบเขตจาก API
         const boundaryData = result[0]
+        let soaItems = []
 
-        // ดึงข้อมูล inclusions แบบปลอดภัย
-        const inclusions = boundaryData.inclusions || []
-        const formattedInclusions = Array.isArray(inclusions)
-          ? inclusions.map(inc => {
-              // ตรวจสอบว่า inc มี _doc หรือไม่
-              const incData = inc._doc || inc
-              return {
-                soa: incData.soa || '',
-                description: incData.description || ''
-              }
-            })
-          : []
+        // ตรวจสอบว่ามีโครงสร้างข้อมูลใหม่หรือไม่
+        if (boundaryData.soaItems) {
+          // ถ้ามีโครงสร้างใหม่ ใช้ข้อมูลโดยตรง
+          soaItems = Array.isArray(boundaryData.soaItems)
+            ? boundaryData.soaItems.map(item => ({
+                soa: item.soa || '',
+                status: item.status || 'Included',
+                description: item.description || ''
+              }))
+            : []
+        } else {
+          // แปลงจากโครงสร้างเก่า (inclusions/exclusions) เป็นโครงสร้างใหม่
+          soaItems = [
+            // แปลง inclusions เป็น status: "Included"
+            ...(boundaryData.inclusions || []).map(inc => ({
+              soa: inc.soa || '',
+              status: 'Included',
+              description: inc.description || ''
+            })),
+            // แปลง exclusions เป็น status: "Excluded"
+            ...(boundaryData.exclusions || []).map(exc => ({
+              soa: exc.soa || '',
+              status: 'Excluded',
+              description: exc.description || ''
+            }))
+          ]
+        }
 
-        // ดึงข้อมูล exclusions แบบปลอดภัย
-        const exclusions = boundaryData.exclusions || []
-        const formattedExclusions = Array.isArray(exclusions)
-          ? exclusions.map(exc => {
-              const excData = exc._doc || exc
-              return {
-                soa: excData.soa || '',
-                description: excData.description || ''
-              }
-            })
-          : []
+        // เก็บข้อมูล SOAs ที่เลือกแล้วในเซ็ต
+        const selectedSOAIds = new Set(soaItems.map(item => item.soa))
+        setSelectedSOAs(selectedSOAIds)
 
-        // สร้างข้อมูลที่มีโครงสร้างตามที่คอมโพเนนต์ต้องการ
         setBoundary({
           _id: boundaryData._id || undefined,
-          inclusions: formattedInclusions,
-          exclusions: formattedExclusions,
+          soaItems,
           besidesSOA: boundaryData.besidesSOA || ''
-        })
-
-        console.log('Formatted boundary data:', {
-          _id: boundaryData._id,
-          inclusions: formattedInclusions,
-          exclusions: formattedExclusions,
-          besidesSOA: boundaryData.besidesSOA
         })
       } else {
         console.warn('Boundary API returned empty data.')
         setBoundary({
           _id: undefined,
-          inclusions: [],
-          exclusions: [],
+          soaItems: [],
           besidesSOA: ''
         })
+        setSelectedSOAs(new Set())
       }
     } catch (error) {
       console.error('Error fetching Boundary:', error)
-      // เพิ่มการจัดการข้อมูลเริ่มต้นเมื่อเกิด error
+      // จัดการข้อมูลเริ่มต้นเมื่อเกิด error
       setBoundary({
         _id: undefined,
-        inclusions: [],
-        exclusions: [],
+        soaItems: [],
         besidesSOA: ''
       })
+      setSelectedSOAs(new Set())
+      setAlert({
+        open: true,
+        message: 'เกิดข้อผิดพลาดในการโหลดข้อมูลขอบเขต',
+        severity: 'error'
+      })
+    } finally {
+      setLoading(false)
     }
   }
 
-  // ✅ Handle Change
-  const handleChange = (field, value, index = null, type = null) => {
-    if (type) {
+  // ฟังก์ชันจัดการเลือก/ยกเลิกการเลือก SOA รายการ
+  const handleToggleSOA = soaId => {
+    // ถ้า soaId มีอยู่ใน boundary.soaItems แล้ว ให้ลบออก
+    if (selectedSOAs.has(soaId)) {
+      // ลบออกจาก boundary.soaItems
       setBoundary(prev => ({
         ...prev,
-        [type]: prev[type].map((item, i) => (i === index ? { ...item, [field]: value } : item))
+        soaItems: prev.soaItems.filter(item => item.soa !== soaId)
       }))
+
+      // ลบออกจาก selectedSOAs
+      const newSelectedSOAs = new Set(selectedSOAs)
+      newSelectedSOAs.delete(soaId)
+      setSelectedSOAs(newSelectedSOAs)
     } else {
-      setBoundary(prev => ({ ...prev, [field]: value }))
+      // ถ้ายังไม่มี ให้เพิ่มเข้าไป
+      setBoundary(prev => ({
+        ...prev,
+        soaItems: [
+          ...prev.soaItems,
+          {
+            soa: soaId,
+            status: 'Included', // ค่าเริ่มต้นเป็น Included
+            description: ''
+          }
+        ]
+      }))
+
+      // เพิ่มเข้าไปใน selectedSOAs
+      const newSelectedSOAs = new Set(selectedSOAs)
+      newSelectedSOAs.add(soaId)
+      setSelectedSOAs(newSelectedSOAs)
     }
   }
 
-  // ✅ เพิ่ม Inclusion / Exclusion
-  const handleAdd = type => {
+  // ฟังก์ชันเปลี่ยนสถานะหรืออธิบายของ SOA item
+  const handleSOAItemChange = (soaId, field, value) => {
     setBoundary(prev => ({
       ...prev,
-      [type]: [...prev[type], { soa: soaOptions.length > 0 ? soaOptions[0].soaId : '', description: '' }]
+      soaItems: prev.soaItems.map(item => (item.soa === soaId ? { ...item, [field]: value } : item))
     }))
   }
 
-  // ✅ ลบ Inclusion / Exclusion
-  const handleRemove = async (type, index) => {
-    setBoundary(prev => {
-      const updatedList = prev[type].filter((_, i) => i !== index)
-      return { ...prev, [type]: updatedList }
-    })
-
-    // ส่งข้อมูลที่อัปเดตไปยังเซิร์ฟเวอร์
-    try {
-      const updatedBoundary = {
-        ...boundary,
-        [type]: boundary[type].filter((_, i) => i !== index) // ลบข้อมูลออก
-      }
-
-      const response = await fetch('http://192.168.0.119:3000/api/4COTO/boundary/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedBoundary)
-      })
-
-      const result = await response.json()
-      console.log('Updated after remove:', result)
-      alert('ลบสำเร็จและบันทึกข้อมูลแล้ว!')
-      fetchBoundaries() // โหลดข้อมูลใหม่เพื่อให้แน่ใจว่าอัปเดตแล้ว
-    } catch (error) {
-      console.error('Error removing boundary:', error)
-    }
-  }
-
-  // ✅ บันทึก Boundary
+  // บันทึก Boundary
   const handleSave = async () => {
     try {
+      // ตรวจสอบว่าทุก SOA item มี description
+      const hasEmptyDescription = boundary.soaItems.some(item => !item.description.trim())
+      if (hasEmptyDescription) {
+        setAlert({
+          open: true,
+          message: 'กรุณากรอกเหตุผลให้ครบทุกรายการ',
+          severity: 'warning'
+        })
+        return
+      }
+
       const response = await fetch('http://192.168.0.119:3000/api/4COTO/boundary/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -181,129 +227,326 @@ export default function BoundaryManagement() {
       })
       const result = await response.json()
       console.log('Saved:', result)
-      alert('บันทึกข้อมูลสำเร็จ!')
+      setAlert({
+        open: true,
+        message: 'บันทึกข้อมูลสำเร็จ!',
+        severity: 'success'
+      })
 
       await fetchBoundaries()
     } catch (error) {
       console.error('Error saving boundary:', error)
+      setAlert({
+        open: true,
+        message: 'เกิดข้อผิดพลาดในการบันทึกข้อมูล',
+        severity: 'error'
+      })
     }
   }
 
+  // ฟังก์ชันสำหรับการค้นหา SOA
+  const handleSearch = e => {
+    setSearchTerm(e.target.value)
+  }
+
+  // ฟังก์ชันสำหรับการกรอง SOA ตามสถานะ
+  const handleStatusFilterChange = e => {
+    setStatusFilter(e.target.value)
+  }
+
+  // ฟังก์ชันสำหรับการกรอง Inclusion/Exclusion
+  const handleInclusionFilterChange = (_, newFilter) => {
+    if (newFilter !== null) {
+      setInclusionFilter(newFilter)
+    }
+  }
+
+  // กรอง SOA ตามคำค้นหา, สถานะการนำไปใช้ และสถานะ Inclusion/Exclusion
+  const filteredSOAs = allSOAs.filter(soa => {
+    // กรองตามคำค้นหา
+    const matchesSearch =
+      soa.controlId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      soa.controlName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      soa.controlDescription?.toLowerCase().includes(searchTerm.toLowerCase())
+
+    // กรองตามสถานะการนำไปใช้
+    const matchesStatus = statusFilter === 'all' || soa.implementationStatus === statusFilter
+
+    // ประกาศฟังก์ชันนี้ก่อนที่จะใช้
+    const getSOAItem = soaId => {
+      return boundary.soaItems.find(item => item.soa === soaId)
+    }
+
+    // ตอนนี้คุณสามารถใช้มันได้
+    const soaItem = getSOAItem(soa.soaId)
+
+    let matchesInclusion = true
+
+    if (inclusionFilter !== 'all') {
+      if (inclusionFilter === 'included') {
+        matchesInclusion = soaItem && soaItem.status === 'Included'
+      } else if (inclusionFilter === 'excluded') {
+        matchesInclusion = soaItem && soaItem.status === 'Excluded'
+      } else if (inclusionFilter === 'selected') {
+        matchesInclusion = soaItem !== undefined
+      } else if (inclusionFilter === 'unselected') {
+        matchesInclusion = soaItem === undefined
+      }
+    }
+
+    return matchesSearch && matchesStatus && matchesInclusion
+  })
+
+  // สร้างแถบสถานะการนำไปใช้
+  const renderImplementationStatus = status => {
+    let color
+    switch (status) {
+      case 'Fully Implemented':
+        color = 'success'
+        break
+      case 'Partially Implemented':
+        color = 'warning'
+        break
+      case 'Not Implemented':
+        color = 'error'
+        break
+      default:
+        color = 'default'
+    }
+    return <Chip label={status} color={color} size='small' />
+  }
+
+  // หา SOA Item จาก soa id
+  const getSOAItem = soaId => {
+    return boundary.soaItems.find(item => item.soa === soaId)
+  }
+
+  // คำนวณสถิติสำหรับแสดงในสรุป
+  const includedCount = boundary.soaItems.filter(item => item.status === 'Included').length
+  const excludedCount = boundary.soaItems.filter(item => item.status === 'Excluded').length
+  const totalSelectedCount = boundary.soaItems.length
+
+  if (loading) {
+    return (
+      <Box display='flex' justifyContent='center' alignItems='center' minHeight='50vh'>
+        <CircularProgress />
+        <Typography variant='h6' sx={{ ml: 2 }}>
+          กำลังโหลดข้อมูล...
+        </Typography>
+      </Box>
+    )
+  }
+
   return (
-    <Box className='p-10 max-w-4xl mx-auto bg-white rounded-lg shadow-lg'>
-      <Typography variant='h5' className='text-center font-bold'>
-        Boundary Management
+    <Box className='p-4 md:p-10 max-w-7xl mx-auto rounded-lg shadow-lg'>
+      <Typography variant='h5' className='text-center font-bold mb-6'>
+        การจัดการขอบเขต (Boundary Management)
       </Typography>
 
-      {/* 🔹 Inclusions */}
-      <Typography variant='h6' className='mt-6'>
-        SOA ที่ใช้ (Inclusions)
-      </Typography>
-      {boundary.inclusions.map((inc, index) => (
-        <Grid container spacing={2} key={index} alignItems='center' className='mt-2'>
-          <Grid item xs={5}>
+      {/* แถบค้นหาและกรอง SOA */}
+      <Paper className='p-4 mb-6'>
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={4}>
+            <TextField
+              fullWidth
+              label='ค้นหา SOA'
+              variant='outlined'
+              value={searchTerm}
+              onChange={handleSearch}
+              InputProps={{
+                startAdornment: <SearchIcon fontSize='small' sx={{ mr: 1, color: 'text.secondary' }} />
+              }}
+              placeholder='ค้นหาตาม ID หรือชื่อ'
+            />
+          </Grid>
+          <Grid item xs={12} md={4}>
             <FormControl fullWidth>
-              <InputLabel>SOA</InputLabel>
+              <InputLabel id='status-filter-label'>สถานะการนำไปใช้</InputLabel>
               <Select
-                value={soaOptions.find(soa => soa.soaId === inc.soa) ? inc.soa : ''}
-                onChange={e => handleChange('soa', e.target.value, index, 'inclusions')}
+                labelId='status-filter-label'
+                value={statusFilter}
+                onChange={handleStatusFilterChange}
+                label='สถานะการนำไปใช้'
+                startAdornment={<FilterListIcon fontSize='small' sx={{ mr: 1, color: 'text.secondary' }} />}
               >
-                {soaOptions.map(soa => (
-                  <MenuItem key={soa.soaId} value={soa.soaId}>
-                    {soa.controlId} {soa.controlName}
-                  </MenuItem>
-                ))}
+                <MenuItem value='all'>ทั้งหมด</MenuItem>
+                <MenuItem value='Fully Implemented'>นำไปใช้เต็มรูปแบบ</MenuItem>
+                <MenuItem value='Partially Implemented'>นำไปใช้บางส่วน</MenuItem>
+                <MenuItem value='Not Implemented'>ยังไม่ได้นำไปใช้</MenuItem>
               </Select>
             </FormControl>
           </Grid>
-          <Grid item xs={5}>
-            <TextField
-              fullWidth
-              label='เหตุผลที่ใช้'
-              value={inc.description || ''}
-              onChange={e => handleChange('description', e.target.value, index, 'inclusions')}
-            />
-          </Grid>
-          <Grid item xs={2}>
-            <IconButton
-              onClick={() => {
-                console.log('Removing inclusions at index:', index)
-                handleRemove('inclusions', index)
-              }}
-              color='error'
-            >
-              <RemoveCircleOutline />
-            </IconButton>
-          </Grid>
-        </Grid>
-      ))}
-      <Button startIcon={<AddCircleOutline />} onClick={() => handleAdd('inclusions')} className='mt-2'>
-        เพิ่ม Inclusion
-      </Button>
-
-      {/* 🔹 Exclusions */}
-      <Typography variant='h6' className='mt-6'>
-        SOA ที่ไม่ใช้ (Exclusions)
-      </Typography>
-      {boundary.exclusions.map((exc, index) => (
-        <Grid container spacing={2} key={index} alignItems='center' className='mt-2'>
-          <Grid item xs={5}>
-            <FormControl fullWidth>
-              <InputLabel>SOA</InputLabel>
-              <Select
-                value={soaOptions.find(soa => soa.soaId === exc.soa) ? exc.soa : ''}
-                onChange={e => handleChange('soa', e.target.value, index, 'exclusions')}
+          <Grid item xs={12} md={4}>
+            <Stack direction='row' spacing={1} alignItems='center'>
+              <Typography variant='body2' sx={{ minWidth: '80px' }}>
+                แสดงเฉพาะ:
+              </Typography>
+              <ToggleButtonGroup
+                value={inclusionFilter}
+                exclusive
+                onChange={handleInclusionFilterChange}
+                aria-label='inclusion filter'
+                size='small'
+                fullWidth
               >
-                {soaOptions.map(soa => (
-                  <MenuItem key={soa.soaId} value={soa.soaId}>
-                    {soa.controlId} {soa.controlName}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={5}>
-            <TextField
-              fullWidth
-              label='เหตุผลที่ไม่ใช้'
-              value={exc.description || ''}
-              onChange={e => handleChange('description', e.target.value, index, 'exclusions')}
-            />
-          </Grid>
-          <Grid item xs={2}>
-            <IconButton
-              onClick={() => {
-                console.log('Removing exclusions at index:', index)
-                handleRemove('exclusions', index)
-              }}
-              color='error'
-            >
-              <RemoveCircleOutline />
-            </IconButton>
+                <ToggleButton value='all' aria-label='show all'>
+                  ทั้งหมด
+                </ToggleButton>
+                <ToggleButton value='included' aria-label='show included only'>
+                  Included
+                </ToggleButton>
+                <ToggleButton value='excluded' aria-label='show excluded only'>
+                  Excluded
+                </ToggleButton>
+                <ToggleButton value='selected' aria-label='show selected only'>
+                  เลือกแล้ว
+                </ToggleButton>
+                <ToggleButton value='unselected' aria-label='show unselected only'>
+                  ยังไม่เลือก
+                </ToggleButton>
+              </ToggleButtonGroup>
+            </Stack>
           </Grid>
         </Grid>
-      ))}
-      <Button startIcon={<AddCircleOutline />} onClick={() => handleAdd('exclusions')} className='mt-2'>
-        เพิ่ม Exclusion
-      </Button>
+      </Paper>
 
-      {/* 🔹 ข้อมูลเพิ่มเติม */}
-      <Typography variant='h6' className='mt-6'>
-        นอกเหนือจาก SOA (BesidesSOA)
+      {/* แสดงสรุปจำนวนรายการที่เลือก */}
+      <Paper className='p-3 mb-4'>
+        <Grid container spacing={2} alignItems='center'>
+          <Grid item>
+            <VisibilityIcon color='primary' />
+          </Grid>
+          <Grid item xs>
+            <Typography variant='body1'>
+              เลือก <strong>{totalSelectedCount}</strong> รายการ จาก {allSOAs.length} รายการ &nbsp;|&nbsp;{' '}
+              <Chip label={`Included: ${includedCount}`} color='success' size='small' />
+              &nbsp; <Chip label={`Excluded: ${excludedCount}`} color='error' size='small' />
+              &nbsp;|&nbsp; กำลังแสดง <strong>{filteredSOAs.length}</strong> รายการ
+            </Typography>
+          </Grid>
+        </Grid>
+      </Paper>
+
+      {/* แสดงรายการ SOA ทั้งหมด */}
+      <Typography variant='h6' className='mt-4 mb-3'>
+        Statement of Applicability (SOA)
+      </Typography>
+
+      <TableContainer component={Paper} sx={{ mb: 4 }}>
+        <Table aria-label='SOA table' size='small'>
+          <TableHead>
+            <TableRow>
+              <TableCell width='5%'>เลือก</TableCell>
+              <TableCell width='10%'>รหัส</TableCell>
+              <TableCell width='25%'>ชื่อ</TableCell>
+              <TableCell width='15%'>สถานะการนำไปใช้</TableCell>
+              <TableCell width='15%'>ใช้/ไม่ใช้</TableCell>
+              <TableCell width='30%'>เหตุผล</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {filteredSOAs.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} align='center'>
+                  ไม่พบรายการ SOA ที่ตรงกับเงื่อนไขการค้นหา
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredSOAs.map(soa => {
+                const isSelected = selectedSOAs.has(soa.soaId)
+                const soaItem = getSOAItem(soa.soaId)
+
+                return (
+                  <TableRow
+                    key={soa.soaId}
+                    sx={{
+                      backgroundColor: isSelected ? 'rgba(25, 118, 210, 0.08)' : 'inherit',
+                      // เพิ่มสีพื้นหลังตามสถานะ Included/Excluded
+                      ...(isSelected &&
+                        soaItem?.status === 'Included' && {
+                          backgroundColor: 'rgba(46, 125, 50, 0.08)'
+                        }),
+                      ...(isSelected &&
+                        soaItem?.status === 'Excluded' && {
+                          backgroundColor: 'rgba(211, 47, 47, 0.08)'
+                        })
+                    }}
+                  >
+                    <TableCell>
+                      <Checkbox checked={isSelected} onChange={() => handleToggleSOA(soa.soaId)} />
+                    </TableCell>
+                    <TableCell>{soa.controlId}</TableCell>
+                    <TableCell>{soa.controlName}</TableCell>
+                    <TableCell>{renderImplementationStatus(soa.implementationStatus)}</TableCell>
+                    <TableCell>
+                      {isSelected && (
+                        <RadioGroup
+                          row
+                          value={soaItem?.status || 'Included'}
+                          onChange={e => handleSOAItemChange(soa.soaId, 'status', e.target.value)}
+                        >
+                          <FormControlLabel value='Included' control={<Radio size='small' />} label='ใช้' />
+                          <FormControlLabel value='Excluded' control={<Radio size='small' />} label='ไม่ใช้' />
+                        </RadioGroup>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {isSelected && (
+                        <TextField
+                          fullWidth
+                          size='small'
+                          placeholder={soaItem?.status === 'Excluded' ? 'ระบุเหตุผลที่ไม่ใช้' : 'ระบุเหตุผลที่ใช้'}
+                          value={soaItem?.description || ''}
+                          onChange={e => handleSOAItemChange(soa.soaId, 'description', e.target.value)}
+                          error={isSelected && !soaItem?.description}
+                          helperText={isSelected && !soaItem?.description ? 'กรุณาระบุเหตุผล' : ''}
+                        />
+                      )}
+                    </TableCell>
+                  </TableRow>
+                )
+              })
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      <Divider className='my-6' />
+
+      {/* ข้อมูลเพิ่มเติม */}
+      <Typography variant='h6' className='mt-6 mb-2'>
+        ข้อมูลเพิ่มเติมนอกเหนือจาก SOA
       </Typography>
       <TextField
         fullWidth
         multiline
-        rows={3}
+        rows={4}
         label='ข้อมูลเพิ่มเติม'
         value={boundary.besidesSOA}
-        onChange={e => handleChange('besidesSOA', e.target.value)}
+        onChange={e => setBoundary(prev => ({ ...prev, besidesSOA: e.target.value }))}
+        placeholder='ระบุข้อมูลเพิ่มเติมเกี่ยวกับขอบเขตที่นอกเหนือจาก SOA เช่น มาตรฐานภายในองค์กร ข้อกำหนดเฉพาะ ฯลฯ'
+        className='mb-6'
       />
 
-      {/* 🔹 ปุ่มบันทึก */}
-      <Button variant='contained' color='primary' className='mt-6' fullWidth onClick={handleSave}>
-        บันทึกข้อมูล Boundary
+      {/* ปุ่มบันทึก */}
+      <Button
+        variant='contained'
+        color='primary'
+        className='mt-6'
+        fullWidth
+        onClick={handleSave}
+        size='large'
+        disabled={boundary.soaItems.length === 0}
+      >
+        บันทึกข้อมูลขอบเขต
       </Button>
+
+      {/* Alert สำหรับแสดงข้อความแจ้งเตือน */}
+      <Snackbar open={alert.open} autoHideDuration={5000} onClose={() => setAlert({ ...alert, open: false })}>
+        <Alert onClose={() => setAlert({ ...alert, open: false })} severity={alert.severity} sx={{ width: '100%' }}>
+          {alert.message}
+        </Alert>
+      </Snackbar>
     </Box>
   )
 }

@@ -42,8 +42,8 @@ const NotFound = ({ mode }) => {
           <Typography className='font-medium text-8xl' color='text.primary'>
             404
           </Typography>
-          <Typography variant='h4'>ไป zest ปะ ⚠️</Typography>
-          <Typography>โค้ดผิด</Typography>
+          <Typography variant='h4'>Back to coding ⚠️</Typography>
+          <Typography>Error</Typography>
         </div>
         <Button href='/' component={Link} variant='contained'>
           Back To Home

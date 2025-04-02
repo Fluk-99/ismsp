@@ -425,7 +425,7 @@ export default function AuditChecklist() {
                   sx={{
                     p: 2,
                     mb: 2,
-                    borderLeft: '4px solid #1B2A49',
+                    borderLeft: '4px solid #FFD700',
                     position: 'relative'
                   }}
                 >
@@ -559,7 +559,7 @@ export default function AuditChecklist() {
 
                   {currentChecklist.questions && currentChecklist.questions.length > 0 ? (
                     currentChecklist.questions.map((question, index) => (
-                      <Paper key={index} elevation={1} sx={{ p: 2, mb: 2, borderLeft: '4px solid #1976d2' }}>
+                      <Paper key={index} elevation={1} sx={{ p: 2, mb: 2, borderLeft: '4px solid #FFD700' }}>
                         <Typography variant='subtitle1' sx={{ fontWeight: 'bold' }}>
                           {index + 1}. {question.topic}
                         </Typography>

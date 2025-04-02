@@ -52,5 +52,8 @@
   ],
   "[javascriptreact]": {
     "editor.defaultFormatter": "ms-vsliveshare.vsliveshare"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "ms-vsliveshare.vsliveshare"
   }
 }

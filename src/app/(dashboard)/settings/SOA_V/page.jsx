@@ -12,6 +12,7 @@ import {
   Paper,
   Typography,
   CircularProgress,
+  Chip,
   Box
 } from '@mui/material'
 import SpeedDial from '@mui/material/SpeedDial'
@@ -40,7 +41,7 @@ const SOA_V = () => {
         if (!response.ok) throw new Error(`Failed to fetch SOA data. Status: ${response.status}`)
 
         const result = await response.json()
-        console.log('Fetched SOA Data:', result) // ✅ Debugging
+        console.log('Fetched SOA Data:', result)
 
         if (!result.data || !Array.isArray(result.data)) {
           throw new Error('Invalid data format')
@@ -50,8 +51,8 @@ const SOA_V = () => {
           soaId: soa.soaId,
           controlId: soa.controlId,
           controlName: soa.controlName,
-          controlDescription: soa.controlDescription || 'No description available', // ✅ ใช้ fallback description
-          implementationStatus: soa.implementationStatus || 'Not Implemented' // ✅ ใช้ค่าเริ่มต้นถ้าไม่มี
+          controlDescription: soa.controlDescription || 'No description available',
+          implementationStatus: soa.implementationStatus || 'Not Implemented'
         }))
 
         setSoas(formattedData)
@@ -65,6 +66,24 @@ const SOA_V = () => {
 
     fetchSOAs()
   }, [])
+
+  const renderImplementationStatus = status => {
+    let color
+    switch (status) {
+      case 'Fully Implemented':
+        color = 'success'
+        break
+      case 'Partially Implemented':
+        color = 'warning'
+        break
+      case 'Not Implemented':
+        color = 'error'
+        break
+      default:
+        color = 'default'
+    }
+    return <Chip label={status} color={color} size='small' />
+  }
 
   return (
     <Box sx={{ padding: '20px', maxWidth: '1100px', margin: '0 auto', position: 'relative' }}>
@@ -82,7 +101,7 @@ const SOA_V = () => {
         <TableContainer component={Paper} sx={{ borderRadius: '12px', boxShadow: 3, marginTop: '20px' }}>
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: '#f5f5f5', fontWeight: 'bold' }}>
+              <TableRow sx={{ fontWeight: 'bold' }}>
                 <TableCell>Number</TableCell>
                 <TableCell>Control ID</TableCell>
                 <TableCell>Control Name</TableCell>
@@ -98,7 +117,7 @@ const SOA_V = () => {
                     <TableCell>{soa.controlId}</TableCell>
                     <TableCell>{soa.controlName}</TableCell>
                     <TableCell>{soa.controlDescription}</TableCell>
-                    <TableCell>{soa.implementationStatus}</TableCell>
+                    <TableCell>{renderImplementationStatus(soa.implementationStatus)}</TableCell>
                   </TableRow>
                 ))
               ) : (

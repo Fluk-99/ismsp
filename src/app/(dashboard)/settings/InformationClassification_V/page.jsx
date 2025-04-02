@@ -53,7 +53,7 @@ const InformationClassification_V = () => {
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
-              <TableRow style={{ backgroundColor: "#f5f5f5" }}>
+              <TableRow>
                 <TableCell>Number</TableCell>
                 <TableCell>Label</TableCell>
                 <TableCell>Description</TableCell>

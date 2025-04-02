@@ -1,23 +1,24 @@
 'use client'
-//ตัวอย่าง
+
 import { useEffect, useState } from 'react'
-import { TextField, Select, MenuItem, Button, Typography, Box, CircularProgress } from '@mui/material'
+import { TextField, Button, Typography, Box, CircularProgress, Autocomplete } from '@mui/material'
 import { toast, ToastContainer } from 'react-toastify'
 import CancelIcon from '@mui/icons-material/Cancel'
 import 'react-toastify/dist/ReactToastify.css'
-//Get api
-//-----------------------------------------------------url------------------------------------
+
+// API URLs
 const API_URL = 'http://192.168.0.119:3000/api/settings/organization'
+const COMPANY_TYPES_URL = 'http://192.168.0.119:3000/api/settings/company-type'
 
 const Organization_C = () => {
-  //---------------------------------------------------------
   const [organizations, setOrganizations] = useState([])
-  //---------------------------------------------------------
   const [loading, setLoading] = useState(true)
   const [canAdd, setCanAdd] = useState(true)
+  const [companyTypes, setCompanyTypes] = useState([])
 
   useEffect(() => {
     fetchOrganizations()
+    fetchCompanyTypes()
   }, [])
 
   // ฟังก์ชันดึงข้อมูลจาก API
@@ -27,10 +28,9 @@ const Organization_C = () => {
       if (!response.ok) throw new Error('Failed to fetch data')
 
       const data = await response.json()
-      //body--------------------------------------------------------------------- ดึงค่ามาใช้
       setOrganizations(
         data.data.map(org => ({
-          id: org._id, // ใช้ `_id` จาก MongoDB
+          id: org._id,
           orgId: org.orgId,
           companyName: org.name,
           companyType: org.businessType,
@@ -38,35 +38,28 @@ const Organization_C = () => {
           isSaved: true
         }))
       )
-      //-------------------------------------------------------------------------
     } catch (error) {
       toast.error('Failed to fetch organizations.')
+      console.error(error)
     } finally {
       setLoading(false)
     }
   }
 
-  // ประเภทของบริษัทที่รองรับ
-  const companyTypes = [
-    'Corporation',
-    'Partnership',
-    'Sole Proprietorship',
-    'Cooperative',
-    'Registered Business',
-    'Unregistered Business',
-    'Manufacturing',
-    'Service',
-    'Retail/Wholesale',
-    'Technology',
-    'Construction',
-    'Logistics',
-    'Local Business',
-    'National Business',
-    'International Business',
-    'Non-Profit Organization',
-    'Government-Owned Enterprise',
-    'Joint Venture'
-  ]
+  const fetchCompanyTypes = async () => {
+    try {
+      const res = await fetch(COMPANY_TYPES_URL)
+      if (!res.ok) throw new Error('Failed to fetch company types')
+      const data = await res.json()
+
+      // Make sure we're using the correct property from the response
+      setCompanyTypes(data.types || [])
+      console.log('Fetched company types:', data.types)
+    } catch (error) {
+      toast.error('Failed to load company types.')
+      console.error(error)
+    }
+  }
 
   // ฟังก์ชันอัปเดต State เมื่อมีการเปลี่ยนแปลงค่า
   const handleChange = (id, field, value) => {
@@ -80,7 +73,39 @@ const Organization_C = () => {
     )
     setCanAdd(true)
   }
-  //------------------------------------------------------------------------------post หรือ save    // สร้าง
+
+  // แก้ไขฟังก์ชันนี้เพื่อบันทึกประเภทบริษัทใหม่
+  const saveCompanyTypeIfNew = async type => {
+    // ตรวจสอบว่าประเภทนี้มีอยู่แล้วหรือไม่
+    if (!type || companyTypes.includes(type)) return
+
+    try {
+      console.log(`Attempting to save new company type: ${type}`)
+
+      const res = await fetch(COMPANY_TYPES_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type })
+      })
+
+      if (!res.ok) {
+        const errorData = await res.json()
+        throw new Error(`Failed to save company type: ${errorData.message || res.statusText}`)
+      }
+
+      const data = await res.json()
+      console.log('Company type save response:', data)
+
+      // อัปเดต state ด้วยประเภทใหม่
+      setCompanyTypes(prev => [...prev, type])
+      toast.success(`Added new company type: ${type}`)
+    } catch (error) {
+      toast.error(`Failed to save new company type: ${error.message}`)
+      console.error('Error saving company type:', error)
+    }
+  }
+
+  // แก้ไขฟังก์ชันนี้เพื่อแยกระหว่างการสร้างใหม่และการอัปเดต
   const handleSaveToAPI = async id => {
     const org = organizations.find(org => org.id === id)
 
@@ -88,10 +113,25 @@ const Organization_C = () => {
       toast.error('Please fill in all fields before saving!')
       return
     }
-    // url + /create
+
+    // บันทึกประเภทบริษัทใหม่ก่อน (ถ้ามี)
+    if (org.companyType && !companyTypes.includes(org.companyType)) {
+      await saveCompanyTypeIfNew(org.companyType)
+    }
+
     try {
-      const response = await fetch(`${API_URL}/create`, {
-        method: 'POST',
+      // ตรวจสอบว่าเป็นการสร้างใหม่หรืออัปเดต
+      const isNewOrg = org.id.startsWith('temp-')
+
+      // กำหนด URL และ Method ตามประเภทของการดำเนินการ
+      let url = isNewOrg ? `${API_URL}/create` : `${API_URL}/${org.orgId}`
+      let method = isNewOrg ? 'POST' : 'PUT'
+
+      console.log(`${isNewOrg ? 'Creating' : 'Updating'} organization:`, org)
+      console.log(`API call: ${method} ${url}`)
+
+      const response = await fetch(url, {
+        method: method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: org.companyName,
@@ -99,16 +139,22 @@ const Organization_C = () => {
         })
       })
 
-      if (!response.ok) throw new Error(`Failed to save organization (${response.status})`)
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(
+          `Failed to ${isNewOrg ? 'create' : 'update'} organization: ${errorData.message || response.statusText}`
+        )
+      }
 
-      toast.success('Organization saved successfully!')
-      fetchOrganizations() // รีโหลดข้อมูลหลังจากบันทึก
+      toast.success(`Organization ${isNewOrg ? 'created' : 'updated'} successfully!`)
+      fetchOrganizations()
       setCanAdd(true)
     } catch (error) {
-      toast.error('Failed to save organization.')
+      toast.error(`Failed to save organization: ${error.message}`)
+      console.error('Error saving organization:', error)
     }
   }
-  //------------------------------------------------------------------------------new
+
   // ฟังก์ชันเพิ่ม Organization ใหม่
   const handleAddOrganization = () => {
     setOrganizations(prev => [
@@ -136,10 +182,11 @@ const Organization_C = () => {
       const response = await fetch(`${API_URL}/${orgId}`, { method: 'DELETE' })
       if (!response.ok) throw new Error(`Failed to delete organization (${response.status})`)
 
-      toast.success('✅ Organization deleted successfully!')
+      toast.success('Organization deleted successfully!')
       await fetchOrganizations()
     } catch (error) {
       toast.error('Failed to delete organization.')
+      console.error(error)
     }
   }
 
@@ -157,7 +204,10 @@ const Organization_C = () => {
         </Box>
       ) : (
         organizations.map(org => (
-          <Box key={org.id} sx={{ display: 'flex', gap: '10px', marginBottom: '20px', alignItems: 'center' }}>
+          <Box
+            key={org.id}
+            sx={{ display: 'flex', gap: '10px', marginBottom: '20px', alignItems: 'center', flexWrap: 'wrap' }}
+          >
             <TextField
               fullWidth
               label='Organization Name'
@@ -166,18 +216,23 @@ const Organization_C = () => {
               onChange={e => handleChange(org.id, 'companyName', e.target.value)}
             />
 
-            <Select
+            <Autocomplete
               fullWidth
-              disabled={!org.isEditable}
+              sx={{ flex: 1 }}
+              freeSolo
+              options={companyTypes}
               value={org.companyType}
-              onChange={e => handleChange(org.id, 'companyType', e.target.value)}
-            >
-              {companyTypes.map(type => (
-                <MenuItem key={type} value={type}>
-                  {type}
-                </MenuItem>
-              ))}
-            </Select>
+              onChange={(e, newValue) => {
+                handleChange(org.id, 'companyType', newValue)
+              }}
+              onInputChange={(e, newInputValue) => {
+                handleChange(org.id, 'companyType', newInputValue)
+              }}
+              renderInput={params => (
+                <TextField {...params} label='Company Type' disabled={!org.isEditable} fullWidth />
+              )}
+              disabled={!org.isEditable}
+            />
 
             <Button variant='contained' color='secondary' onClick={() => handleEditToggle(org.id)}>
               {org.isEditable ? 'Cancel' : 'Edit'}
@@ -192,7 +247,12 @@ const Organization_C = () => {
               Save
             </Button>
 
-            <Button variant='contained' color='error' onClick={() => handleDeleteOrganization(org.orgId)}>
+            <Button
+              variant='contained'
+              color='error'
+              onClick={() => handleDeleteOrganization(org.orgId)}
+              disabled={!org.orgId} // Disable for new records
+            >
               Delete
             </Button>
           </Box>

@@ -159,7 +159,7 @@ const colorSchemes = skin => {
           main: '#FFD700',
           light: '#FFEB99',
           dark: '#C79C00',
-          //contrastText: '#0A192F',
+          contrastText: '#0A192F',
           lighterOpacity: 'rgb(var(--mui-palette-primary-mainChannel) / 0.08)',
           lightOpacity: 'rgb(var(--mui-palette-primary-mainChannel) / 0.16)',
           mainOpacity: 'rgb(var(--mui-palette-primary-mainChannel) / 0.24)',

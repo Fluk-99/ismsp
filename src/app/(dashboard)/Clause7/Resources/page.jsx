@@ -122,7 +122,7 @@ const ResourcesForm = () => {
     try {
       setLoading(true)
 
-      // Validate required fields
+      // Validate required fields (no file validation)
       if (!newResource.resourceName.trim() || !newResource.category) {
         showNotification('Please enter required information (resource name and category)', 'error')
         setLoading(false)
@@ -135,6 +135,7 @@ const ResourcesForm = () => {
       formData.append('description', newResource.description)
       formData.append('status', newResource.status)
 
+      // Only attach file if one was selected
       if (newResource.file) {
         formData.append('file', newResource.file)
       }
@@ -285,7 +286,7 @@ const ResourcesForm = () => {
   }
 
   return (
-    <Box p={4} bgcolor='white' boxShadow={3} borderRadius={2} position='relative'>
+    <Box p={4} boxShadow={3} borderRadius={2} position='relative'>
       {loading && (
         <Box
           position='absolute'
@@ -338,8 +339,11 @@ const ResourcesForm = () => {
                 <InputLabel>Category</InputLabel>
                 <Select name='category' value={newResource.category} onChange={handleChange} label='Category'>
                   <MenuItem value='Personnel'>Personnel</MenuItem>
-                  <MenuItem value='Equipment'>Equipment</MenuItem>
                   <MenuItem value='Budget'>Budget</MenuItem>
+                  <MenuItem value='Information System'>Information System</MenuItem>
+                  <MenuItem value='Hardware'>Hardware</MenuItem>
+                  <MenuItem value='Data'>Data</MenuItem>
+                  <MenuItem value='Service'>Service</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
@@ -373,7 +377,7 @@ const ResourcesForm = () => {
                   variant='body2'
                   sx={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                 >
-                  {newResource.fileName || 'No file selected'}
+                  {newResource.fileName || 'No file selected (optional)'}
                 </Typography>
                 <Button component='label' variant='contained' startIcon={<UploadFileIcon />}>
                   Upload File
@@ -381,7 +385,6 @@ const ResourcesForm = () => {
                 </Button>
               </Box>
             </Grid>
-
             <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
               {editMode && (
                 <Button
@@ -418,7 +421,7 @@ const ResourcesForm = () => {
 
       {/* Resource Table */}
       <Paper variant='outlined' sx={{ mb: 4, borderRadius: 2 }}>
-        <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', bgcolor: '#f5f5f5' }}>
+        <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography variant='h6'>Resource List</Typography>
           <Box>
             <Button variant='outlined' startIcon={<FilterListIcon />} onClick={toggleFilters} sx={{ mr: 1 }}>
@@ -434,7 +437,7 @@ const ResourcesForm = () => {
 
         {/* Filter Section */}
         {showFilters && (
-          <Box sx={{ p: 2, bgcolor: '#f9f9f9', borderBottom: '1px solid #e0e0e0' }}>
+          <Box sx={{ p: 2, borderBottom: '1px solid #e0e0e0' }}>
             <Grid container spacing={2}>
               <Grid item xs={12} md={4}>
                 <FormControl fullWidth variant='outlined' size='small'>
@@ -447,8 +450,11 @@ const ResourcesForm = () => {
                   >
                     <MenuItem value=''>All Categories</MenuItem>
                     <MenuItem value='Personnel'>Personnel</MenuItem>
-                    <MenuItem value='Equipment'>Equipment</MenuItem>
                     <MenuItem value='Budget'>Budget</MenuItem>
+                    <MenuItem value='Information System'>Information System</MenuItem>
+                    <MenuItem value='Hardware'>Hardware</MenuItem>
+                    <MenuItem value='Data'>Data</MenuItem>
+                    <MenuItem value='Service'>Service</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
@@ -469,7 +475,7 @@ const ResourcesForm = () => {
         <TableContainer>
           <Table>
             <TableHead>
-              <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+              <TableRow>
                 <TableCell width='30%'>Resource Name</TableCell>
                 <TableCell width='15%'>Category</TableCell>
                 <TableCell width='25%'>Description</TableCell>
@@ -509,7 +515,7 @@ const ResourcesForm = () => {
                           </IconButton>
                         </Tooltip>
                       ) : (
-                        '-'
+                        'No file'
                       )}
                     </TableCell>
                     <TableCell align='center'>
@@ -539,6 +545,7 @@ const ResourcesForm = () => {
         </Typography>
 
         <Grid container spacing={3}>
+          {/* Personnel */}
           <Grid item xs={12} md={4}>
             <Paper
               elevation={0}
@@ -553,28 +560,11 @@ const ResourcesForm = () => {
               <Typography variant='h5' fontWeight='bold' color='#1976d2'>
                 {resources.filter(r => r.category === 'Personnel').length}
               </Typography>
-              <Typography>Personnel Resources</Typography>
+              <Typography>Personnel</Typography>
             </Paper>
           </Grid>
 
-          <Grid item xs={12} md={4}>
-            <Paper
-              elevation={0}
-              sx={{
-                p: 2,
-                bgcolor: '#ffccbc',
-                borderRadius: 2,
-                border: '1px solid #ffab91',
-                textAlign: 'center'
-              }}
-            >
-              <Typography variant='h5' fontWeight='bold' color='#ff7043'>
-                {resources.filter(r => r.category === 'Equipment').length}
-              </Typography>
-              <Typography>Equipment Resources</Typography>
-            </Paper>
-          </Grid>
-
+          {/* Budget */}
           <Grid item xs={12} md={4}>
             <Paper
               elevation={0}
@@ -589,7 +579,83 @@ const ResourcesForm = () => {
               <Typography variant='h5' fontWeight='bold' color='#388e3c'>
                 {resources.filter(r => r.category === 'Budget').length}
               </Typography>
-              <Typography>Budget Resources</Typography>
+              <Typography>Budget</Typography>
+            </Paper>
+          </Grid>
+
+          {/* Information System */}
+          <Grid item xs={12} md={4}>
+            <Paper
+              elevation={0}
+              sx={{
+                p: 2,
+                bgcolor: '#f3e5f5',
+                borderRadius: 2,
+                border: '1px solid #ce93d8',
+                textAlign: 'center'
+              }}
+            >
+              <Typography variant='h5' fontWeight='bold' color='#9c27b0'>
+                {resources.filter(r => r.category === 'Information System').length}
+              </Typography>
+              <Typography>Information System</Typography>
+            </Paper>
+          </Grid>
+
+          {/* Hardware */}
+          <Grid item xs={12} md={4}>
+            <Paper
+              elevation={0}
+              sx={{
+                p: 2,
+                bgcolor: '#fff3e0',
+                borderRadius: 2,
+                border: '1px solid #ffb74d',
+                textAlign: 'center'
+              }}
+            >
+              <Typography variant='h5' fontWeight='bold' color='#fb8c00'>
+                {resources.filter(r => r.category === 'Hardware').length}
+              </Typography>
+              <Typography>Hardware</Typography>
+            </Paper>
+          </Grid>
+
+          {/* Data */}
+          <Grid item xs={12} md={4}>
+            <Paper
+              elevation={0}
+              sx={{
+                p: 2,
+                bgcolor: '#e1f5fe',
+                borderRadius: 2,
+                border: '1px solid #4fc3f7',
+                textAlign: 'center'
+              }}
+            >
+              <Typography variant='h5' fontWeight='bold' color='#039be5'>
+                {resources.filter(r => r.category === 'Data').length}
+              </Typography>
+              <Typography>Data</Typography>
+            </Paper>
+          </Grid>
+
+          {/* Service */}
+          <Grid item xs={12} md={4}>
+            <Paper
+              elevation={0}
+              sx={{
+                p: 2,
+                bgcolor: '#fce4ec',
+                borderRadius: 2,
+                border: '1px solid #f06292',
+                textAlign: 'center'
+              }}
+            >
+              <Typography variant='h5' fontWeight='bold' color='#ec407a'>
+                {resources.filter(r => r.category === 'Service').length}
+              </Typography>
+              <Typography>Service</Typography>
             </Paper>
           </Grid>
         </Grid>

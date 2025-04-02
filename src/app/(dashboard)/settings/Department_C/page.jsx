@@ -74,7 +74,7 @@ const Department_C = () => {
 
       if (!response.ok) throw new Error('Failed to save department.')
 
-      toast.success('✅ Department saved successfully!')
+      toast.success('Department saved successfully!')
       setEditingId(null)
       fetchDepartments()
     } catch (error) {
@@ -82,7 +82,7 @@ const Department_C = () => {
     }
   }
 
-  // ✅ ฟังก์ชันเพิ่ม Department
+  // ฟังก์ชันเพิ่ม Department
   const handleAddDepartment = () => {
     const newDept = {
       deptId: `DEPT-${Date.now()}`,
@@ -95,13 +95,13 @@ const Department_C = () => {
     setEditingId(newDept.deptId)
   }
 
-  // ✅ ฟังก์ชันลบ Department
+  // ฟังก์ชันลบ Department
   const handleDeleteDepartment = async deptId => {
     try {
       const response = await fetch(`${BASE_URL}/${deptId}`, { method: 'DELETE' })
       if (!response.ok) throw new Error('Failed to delete department.')
 
-      toast.success('✅ Department deleted successfully!')
+      toast.success('Department deleted successfully!')
       setDepartments(prev => prev.filter(dept => dept.deptId !== deptId))
     } catch (error) {
       toast.error(error.message || 'Failed to delete department.')
@@ -132,7 +132,7 @@ const Department_C = () => {
 
       if (!response.ok) throw new Error('Failed to delete sub-department.')
 
-      toast.success('✅ Sub-department deleted successfully!')
+      toast.success('Sub-department deleted successfully!')
       setDepartments(prev =>
         prev.map(dept =>
           dept.deptId === deptId

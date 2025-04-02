@@ -1,101 +1,159 @@
-"use client";
+'use client'
 
-import { useEffect, useState } from "react";
-import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
-import { Typography, Box, CircularProgress } from "@mui/material";
-import SpeedDial from "@mui/material/SpeedDial";
-import SpeedDialIcon from "@mui/material/SpeedDialIcon";
-import SpeedDialAction from "@mui/material/SpeedDialAction";
+import { useEffect, useState } from 'react'
+import dynamic from 'next/dynamic'
+import { useRouter } from 'next/navigation'
+import { Typography, Box, CircularProgress } from '@mui/material'
+import SpeedDial from '@mui/material/SpeedDial'
+import SpeedDialIcon from '@mui/material/SpeedDialIcon'
+import SpeedDialAction from '@mui/material/SpeedDialAction'
 
 // โหลด react-d3-tree แบบ dynamic (เพราะใช้ window object)
-const Tree = dynamic(() => import("react-d3-tree"), { ssr: false });
+const Tree = dynamic(() => import('react-d3-tree'), { ssr: false })
 
 const actions = [
-  { icon: "📋", name: "Share" },
-  { icon: "🖨️", name: "Export" },
-  { icon: "✏️", name: "Edit", path: "OrganizationChart_C" },
-];
+  { icon: '📋', name: 'Share' },
+  { icon: '🖨️', name: 'Export' },
+  { icon: '✏️', name: 'Edit', path: 'OrganizationChart_C' }
+]
 
-const API_URL = "http://192.168.0.119:3000/api/settings/organization-chart";
+const API_URL = 'http://192.168.0.119:3000/api/settings/organization-chart'
+const DEPARTMENTS_API_URL = 'http://192.168.0.119:3000/api/settings/department' // เพิ่ม API URL สำหรับดึงข้อมูลแผนก
 
 const OrganizationChart_V = () => {
-  const [organizationCharts, setOrganizationCharts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const [organizationCharts, setOrganizationCharts] = useState([])
+  const [departments, setDepartments] = useState([])
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
   useEffect(() => {
-    const fetchOrganizationCharts = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch(API_URL);
-        if (!response.ok) throw new Error("Failed to fetch data");
-        const data = await response.json();
+        // ดึงข้อมูลพร้อมกันทั้งแผนภูมิองค์กรและข้อมูลแผนก
+        const [chartsResponse, departmentsResponse] = await Promise.all([fetch(API_URL), fetch(DEPARTMENTS_API_URL)])
 
-        console.log("API Response:", data); // ✅ Debug API Response
+        if (!chartsResponse.ok) throw new Error('Failed to fetch organization charts')
+        if (!departmentsResponse.ok) throw new Error('Failed to fetch departments')
 
-        if (Array.isArray(data.data)) {
-          setOrganizationCharts(data.data); // ✅ ใช้ `data.data` แทน `data`
+        const chartsData = await chartsResponse.json()
+        const departmentsData = await departmentsResponse.json()
+
+        console.log('Organization Charts API Response:', chartsData)
+        console.log('Departments API Response:', departmentsData)
+
+        if (Array.isArray(chartsData.data)) {
+          setOrganizationCharts(chartsData.data)
         } else {
-          console.error("Unexpected API response:", data);
-          setOrganizationCharts([]);
+          console.error('Unexpected organization charts API response:', chartsData)
+          setOrganizationCharts([])
+        }
+
+        if (Array.isArray(departmentsData.data)) {
+          setDepartments(departmentsData.data)
+        } else {
+          console.error('Unexpected departments API response:', departmentsData)
+          setDepartments([])
         }
       } catch (error) {
-        console.error("Error fetching organization charts:", error);
-        setOrganizationCharts([]);
+        console.error('Error fetching data:', error)
+        setOrganizationCharts([])
+        setDepartments([])
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
-    fetchOrganizationCharts();
-  }, []);
+    fetchData()
+  }, [])
 
-  // ✅ ปรับโครงสร้าง tree ให้รวมทุก `chartId` เป็น subtree ของ Root
+  // ฟังก์ชันสำหรับค้นหาชื่อของ Sub-Department จาก ID
+  const getSubDepartmentName = (deptId, subDeptId) => {
+    if (!subDeptId) return 'N/A'
+
+    const department = departments.find(dept => dept._id === deptId)
+    if (!department || !department.subDepartments) return 'N/A'
+
+    const subDept = department.subDepartments.find(sub => sub.subDeptId === subDeptId)
+    return subDept ? subDept.name : 'N/A'
+  }
+
+  // ปรับโครงสร้าง tree ให้รวมทุก `chartId` เป็น subtree ของ Root และแสดงชื่อ Sub-Department แทน ID
   const treeData = {
-    name: "Organization Charts",
+    name: 'Organization Charts',
     children: Array.isArray(organizationCharts)
       ? organizationCharts.map(chart => ({
           name: chart.chartId,
-          attributes: { "Report To": chart.reportToReference?.name || "N/A" },
-          children: chart.departments?.map(dept => ({
-            name: dept.department?.name || "N/A",
-            attributes: { "Department": dept.department?.name || "N/A" },
-            children: dept.employees?.map(emp => ({
-              name: emp.employee?.name || "N/A",
-              attributes: {
-                "Position": emp.employee?.position || "N/A",
-                "Sub-Department": emp.subDepartment || "N/A"
-              }
-            })) || [],
-          })) || [],
+          attributes: { 'Report To': chart.reportToReference?.name || 'N/A' },
+          children:
+            chart.departments?.map(dept => ({
+              name: dept.department?.name || 'N/A',
+              attributes: { Department: dept.department?.name || 'N/A' },
+              children:
+                dept.employees?.map(emp => ({
+                  name: emp.employee?.name || 'N/A',
+                  attributes: {
+                    Position: emp.employee?.position || 'N/A',
+                    'Sub-Department': getSubDepartmentName(dept.department?._id, emp.subDepartment),
+                    'Job Details': emp.jobDetails || 'N/A' // เพิ่ม Job Details
+                  }
+                })) || []
+            })) || []
         }))
-      : [],
-  };
+      : []
+  }
+
+  // Custom node renderer สำหรับ react-d3-tree
+  const renderCustomNodeElement = ({ nodeDatum, toggleNode }) => (
+    <g onClick={toggleNode}>
+      <circle r={15} fill={nodeDatum.children ? '#041E3C' : '#fff'} stroke='#000' strokeWidth={1} />
+      <text fill='black' strokeWidth='0' x='20' y='0' style={{ fontSize: '0.9em' }}>
+        {nodeDatum.name}
+      </text>
+      {nodeDatum.attributes && (
+        <foreignObject width='250' height='160' x='20' y='10'>
+          <div
+            style={{
+              padding: '5px',
+              borderRadius: '5px',
+              fontSize: '0.8em'
+            }}
+          >
+            {Object.entries(nodeDatum.attributes).map(([key, value], i) => (
+              <div key={i} style={{ margin: '3px 0' }}>
+                <strong>{key}:</strong> {value}
+              </div>
+            ))}
+          </div>
+        </foreignObject>
+      )}
+    </g>
+  )
 
   return (
-    <Box sx={{ padding: "20px", maxWidth: "100%", height: "80vh", position: "relative" }}>
-      <Typography variant="h4" align="center" gutterBottom>
+    <Box sx={{ padding: '20px', maxWidth: '100%', height: '80vh', position: 'relative' }}>
+      <Typography variant='h4' align='center' gutterBottom>
         Organization Chart Tree View
       </Typography>
 
       {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", marginTop: "20px" }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
           <CircularProgress />
         </Box>
       ) : (
-        <Box sx={{ width: "100%", height: "100%" }}>
+        <Box sx={{ width: '100%', height: '100%' }}>
           {treeData.children.length > 0 ? (
             <Tree
               data={treeData}
-              orientation="vertical"
+              orientation='vertical'
               translate={{ x: window.innerWidth / 2, y: 100 }}
-              nodeSize={{ x: 200, y: 150 }}
-              separation={{ siblings: 1, nonSiblings: 2 }}
+              nodeSize={{ x: 300, y: 200 }} // เพิ่มขนาดโหนดให้มีพื้นที่มากขึ้น
+              separation={{ siblings: 1.5, nonSiblings: 2 }} // เพิ่มระยะห่างระหว่างโหนด
               zoomable
               collapsible
+              renderCustomNodeElement={renderCustomNodeElement}
             />
           ) : (
-            <Typography align="center" sx={{ marginTop: "20px" }}>
+            <Typography align='center' sx={{ marginTop: '20px' }}>
               No Data Available
             </Typography>
           )}
@@ -104,11 +162,11 @@ const OrganizationChart_V = () => {
 
       {/* SpeedDial เพิ่มเข้ามา */}
       <SpeedDial
-        ariaLabel="SpeedDial openIcon example"
-        sx={{ position: "fixed", bottom: 16, right: 16 }}
+        ariaLabel='SpeedDial openIcon example'
+        sx={{ position: 'fixed', bottom: 16, right: 16 }}
         icon={<SpeedDialIcon />}
       >
-        {actions.map((action) => (
+        {actions.map(action => (
           <SpeedDialAction
             key={action.name}
             icon={<span>{action.icon}</span>}
@@ -119,7 +177,7 @@ const OrganizationChart_V = () => {
         ))}
       </SpeedDial>
     </Box>
-  );
-};
+  )
+}
 
-export default OrganizationChart_V;
+export default OrganizationChart_V

@@ -289,7 +289,7 @@ export default function FactorManagement() {
   }
 
   return (
-    <Box className='p-10 max-w-4xl mx-auto bg-white rounded-lg shadow-lg'>
+    <Box className='p-10 max-w-4xl mx-auto rounded-lg shadow-lg'>
       <Typography variant='h5' className='text-center font-bold mb-4'>
         Factor Management
       </Typography>

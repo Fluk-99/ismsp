@@ -493,7 +493,6 @@ const ContinualImprovement = () => {
                   display='flex'
                   justifyContent='center'
                   alignItems='center'
-                  bgcolor='rgba(255, 255, 255, 0.7)'
                   zIndex={10}
                 >
                   <CircularProgress />
@@ -563,7 +562,7 @@ const ContinualImprovement = () => {
                     ปัญหาที่พบ
                   </Typography>
                   {problemEntries.map((entry, index) => (
-                    <Box key={entry.id} sx={{ mb: 2, p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
+                    <Box key={entry.id} sx={{ mb: 2, p: 2, borderRadius: 1 }}>
                       <Grid container spacing={2}>
                         <Grid item xs={12} md={6}>
                           <Typography variant='body2' gutterBottom>

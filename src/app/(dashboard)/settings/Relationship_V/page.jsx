@@ -83,7 +83,7 @@ const Relationship_V = () => {
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
-              <TableRow style={{ backgroundColor: "#f5f5f5" }}>
+              <TableRow>
                 <TableCell>Number</TableCell>
                 <TableCell>Name</TableCell>
               </TableRow>

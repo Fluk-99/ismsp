@@ -114,11 +114,11 @@ export default function ScopeStatementManagement() {
   }
 
   return (
-    <div className='p-10 max-w-3xl mx-auto bg-white rounded-lg shadow-lg'>
+    <div className='p-10 max-w-3xl mx-auto rounded-lg shadow-lg'>
       <h2 className='text-xl font-bold text-center mb-6'>Scope Statement Management</h2>
 
       {/* 🔹 ฟอร์มเพิ่ม Scope Statement */}
-      <div className='p-4 border rounded-lg bg-gray-50 mb-6'>
+      <div className='p-4 border rounded-lg -50 mb-6'>
         <h3 className='text-lg font-semibold mb-4'>{isEditing ? 'แก้ไข' : 'เพิ่ม'} Scope Statement</h3>
 
         <TextField

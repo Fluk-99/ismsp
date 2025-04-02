@@ -19,7 +19,7 @@ import { toast, ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import CloudUploadIcon from '@mui/icons-material/CloudUpload'
 
-// 📌 API Endpoints
+// API Endpoints
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://192.168.0.119:3000/api'
 const ENDPOINTS = {
   EMPLOYEE: `${API_URL}/settings/employee`,
@@ -40,7 +40,7 @@ const ISMSRoles = () => {
   const [approvedBy, setApprovedBy] = useState('')
   const [referenceDocument, setReferenceDocument] = useState(null)
 
-  // 📌 ดึงข้อมูล Employee และ Roles
+  // ดึงข้อมูล Employee และ Roles
   const fetchAllData = useCallback(async () => {
     setState(prev => ({ ...prev, loading: true }))
     try {
@@ -49,8 +49,8 @@ const ISMSRoles = () => {
       const employees = await employeesRes.json()
       const roles = await rolesRes.json()
 
-      console.log('✅ Fetched Employees:', employees.data)
-      console.log('✅ Fetched Roles (Raw):', roles)
+      console.log('Fetched Employees:', employees.data)
+      console.log('Fetched Roles (Raw):', roles)
 
       setState(prev => ({
         ...prev,
@@ -59,7 +59,7 @@ const ISMSRoles = () => {
         loading: false
       }))
     } catch (error) {
-      console.error('❌ Error fetching data:', error)
+      console.error('Error fetching data:', error)
       toast.error('Failed to load data')
       setState(prev => ({ ...prev, loading: false }))
     }
@@ -73,7 +73,7 @@ const ISMSRoles = () => {
     console.log('🔍 Debugging roles:', state.roles)
   }, [state.roles])
 
-  // 📌 ฟังก์ชันสร้าง Role ใหม่
+  // ฟังก์ชันสร้าง Role ใหม่
   const handleSubmit = async () => {
     const formData = new FormData()
     formData.append('responsiblePerson', selectedEmployee)
@@ -83,7 +83,7 @@ const ISMSRoles = () => {
     formData.append('approvedBy', approvedBy)
     if (referenceDocument) formData.append('referenceDocument', referenceDocument)
 
-    // ✅ Debugging: ดูค่าที่ถูกส่งไป API
+    // Debugging: ดูค่าที่ถูกส่งไป API
     console.log('🔍 Sending Data:', {
       responsiblePerson: selectedEmployee,
       role,
@@ -100,19 +100,19 @@ const ISMSRoles = () => {
       })
 
       const result = await response.json()
-      console.log('🔍 Server Response:', response.status, result) // ✅ Debugging API Response
+      console.log('🔍 Server Response:', response.status, result) // Debugging API Response
 
       if (!response.ok) throw new Error(result.message || 'Failed to save role')
 
       toast.success('Role saved successfully!')
       fetchAllData()
     } catch (error) {
-      console.error('❌ Error saving role:', error)
+      console.error('Error saving role:', error)
       toast.error('Failed to save role')
     }
   }
 
-  // 📌 ฟังก์ชันลบ Role
+  // ฟังก์ชันลบ Role
   const handleDelete = async id => {
     if (!window.confirm('Are you sure you want to delete this role?')) return
     try {

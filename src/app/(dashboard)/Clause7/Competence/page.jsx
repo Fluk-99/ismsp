@@ -46,12 +46,13 @@ const Competence = () => {
   useEffect(() => {
     fetchEmployees()
     fetchCompetences()
-
-    if (employees.length === 0) {
-      addEmployee()
-    }
   }, [])
 
+  useEffect(() => {
+    if (employees.length === 0 && allEmployees.length > 0) {
+      addEmployee()
+    }
+  }, [employees, allEmployees])
   // ดึงข้อมูลพนักงาน
   const fetchEmployees = async () => {
     try {
@@ -222,15 +223,17 @@ const Competence = () => {
   }
 
   const toggleEdit = async id => {
-    // ถ้ากำลังแก้ไขอยู่และกดเปลี่ยนเป็นบันทึก
     const employee = employees.find(emp => emp.id === id)
-
     if (employee.isEditing) {
-      // ส่งข้อมูลไปบันทึกที่ API
-      await saveCompetence(employee)
+      try {
+        await saveCompetence(employee)
+        setEmployees(prev => prev.map(emp => (emp.id === id ? { ...emp, isEditing: false } : emp)))
+      } catch (error) {
+        showSnackbar('ไม่สามารถบันทึกข้อมูลได้', 'error')
+      }
+    } else {
+      setEmployees(prev => prev.map(emp => (emp.id === id ? { ...emp, isEditing: true } : emp)))
     }
-
-    setEmployees(prev => prev.map(emp => (emp.id === id ? { ...emp, isEditing: !emp.isEditing } : emp)))
   }
 
   const toggleEditAll = async () => {
@@ -280,7 +283,8 @@ const Competence = () => {
       // อัปโหลดไฟล์ใบรับรอง
       employee.trainingPrinciplesAndCertificates.forEach((item, index) => {
         if (item.certificate && item.certificate.file) {
-          formData.append('certificationFiles', item.certificate.file)
+          formData.append(`certificationFiles_${index}`, item.certificate.file)
+          formData.append(`certificationPrinciples_${index}`, item.principle)
         }
       })
 
@@ -363,7 +367,7 @@ const Competence = () => {
   }
 
   return (
-    <Box p={4} bgcolor='white' boxShadow={3} borderRadius={2} position='relative'>
+    <Box p={4} boxShadow={3} borderRadius={2} position='relative'>
       {loading && (
         <Box
           position='absolute'

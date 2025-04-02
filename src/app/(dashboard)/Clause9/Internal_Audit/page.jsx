@@ -634,7 +634,7 @@ export default function InternalAudit() {
 
           <TableContainer component={Paper} sx={{ boxShadow: 3 }}>
             <Table>
-              <TableHead sx={{ bgcolor: '#f5f5f5' }}>
+              <TableHead sx={{}}>
                 <TableRow>
                   <TableCell sx={{ fontWeight: 'bold' }}>ผู้ตรวจสอบ</TableCell>
                   <TableCell sx={{ fontWeight: 'bold' }}>วันที่ตรวจ</TableCell>

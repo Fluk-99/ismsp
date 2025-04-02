@@ -49,7 +49,7 @@ const OrganizationTable = () => {
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
-              <TableRow style={{ backgroundColor: "#f5f5f5" }}>
+              <TableRow>
                 <TableCell>Number</TableCell>
                 <TableCell>ID</TableCell>
                 <TableCell>Organization Name</TableCell>

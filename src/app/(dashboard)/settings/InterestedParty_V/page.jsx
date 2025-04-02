@@ -68,7 +68,7 @@ const InterestedParty_V = () => {
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
-              <TableRow style={{ backgroundColor: "#f5f5f5" }}>
+              <TableRow>
                 <TableCell>Number</TableCell>
                 <TableCell>Organization</TableCell>
                 <TableCell>Relationships</TableCell>
@@ -83,11 +83,11 @@ const InterestedParty_V = () => {
                     <TableCell>{index + 1}</TableCell>
                     <TableCell>{party.organization?.name || party.organization || "N/A"}</TableCell>
                     <TableCell>
-          {party.relationships.length > 0 ? party.relationships.join(", ") : "N/A"} {/* ✅ แสดง name */}
+          {party.relationships.length > 0 ? party.relationships.join(", ") : "N/A"} {/* แสดง name */}
         </TableCell>
         <TableCell>
           {party.branches.length > 0
-            ? party.branches.map((b) => `${b.branchName} (${b.address})`).join(", ") // ✅ แสดงทั้ง branchName และ address
+            ? party.branches.map((b) => `${b.branchName} (${b.address})`).join(", ") // แสดงทั้ง branchName และ address
             : "N/A"}
         </TableCell>
                     <TableCell>{party.contactNumber || "N/A"}</TableCell>

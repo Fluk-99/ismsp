@@ -189,7 +189,8 @@ const Customizer = ({ breakpoint = 'lg', dir = 'ltr', disableDirection = false }
                       className={classnames(styles.primaryColorWrapper, {
                         [styles.active]: settings.primaryColor === item.main
                       })}
-                      onClick={() => handleChange('primaryColor', item.main)}
+                      /*onClick={() => handleChange('primaryColor', item.main)}*/ /*original*/
+                      onClick={() => handleChange('primaryColor', item.light.main)}
                     >
                       <div className={styles.primaryColor} style={{ backgroundColor: item.main }} />
                     </div>

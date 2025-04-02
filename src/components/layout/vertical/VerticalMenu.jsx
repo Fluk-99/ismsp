@@ -72,23 +72,23 @@ const VerticalMenu = ({ scrollMenu }) => {
           <MenuItem href='/settings/Employee_V' icon={<>👨‍💼</>}>
             Employee
           </MenuItem>
-          <MenuItem href='/settings/InformationClassification_V' icon={<>📂</>}>
-            Information Classification
-          </MenuItem>
-          <MenuItem href='/settings/InterestedParty_V' icon={<>🤝</>}>
-            Interested Party
-          </MenuItem>
-          <MenuItem href='/settings/OrganizationChart_V' icon={<>📊</>}>
-            Organization Chart
+          <MenuItem href='/settings/Relationship_V' icon={<>🔗</>}>
+            Relationship
           </MenuItem>
           <MenuItem href='/settings/Process_V' icon={<>⚙️</>}>
             Process
           </MenuItem>
-          <MenuItem href='/settings/Relationship_V' icon={<>🔗</>}>
-            Relationship
+          <MenuItem href='/settings/OrganizationChart_V' icon={<>📊</>}>
+            Organization Chart
+          </MenuItem>
+          <MenuItem href='/settings/InterestedParty_V' icon={<>🤝</>}>
+            Interested Party
           </MenuItem>
           <MenuItem href='/settings/SOA_V' icon={<>📜</>}>
             SOA
+          </MenuItem>
+          <MenuItem href='/settings/InformationClassification_V' icon={<>📂</>}>
+            Information Classification
           </MenuItem>
         </SubMenu>
         <SubMenu label='Clause4' icon={<i className='tabler-award-filled' />}>
@@ -97,25 +97,22 @@ const VerticalMenu = ({ scrollMenu }) => {
           <MenuItem href='/Clause4/FullInterestedParties'>FullInterested Parties</MenuItem>
           <MenuItem href='/Clause4/ScopeStatement'>Scope Statement</MenuItem>
         </SubMenu>
-
         <SubMenu label='Clause5' icon={<i className='tabler-award-filled' />}>
           <MenuItem href='/Clause5/LeadershipCommitment'>Leadership Commitment</MenuItem>
           <MenuItem href='/Clause5/InformationSecurityPolicy'>Information Security Policy</MenuItem>
           <MenuItem href='/Clause5/ismsRole'>ismsRole</MenuItem>
         </SubMenu>
-
         <SubMenu label='Clause6' icon={<i className='tabler-award-filled' />}>
           <MenuItem href='/Clause6/Actions_to_Address_Risks_and_Opportunities' icon={<>👥</>}>
             Actions to Address Risks and Opportunities
           </MenuItem>
-          <MenuItem href='/Clause6/Information Security_Objectives_and_Planning_to_Achieve_Them' icon={<>👥</>}>
+          <MenuItem href='/Clause6/Information_Security_Objectives_and_Planning_to_Achieve_Them' icon={<>👥</>}>
             Information Security Objectives and Planning to Achieve Them
           </MenuItem>
           <MenuItem href='/Clause6/Planning_of_Changes' icon={<>👥</>}>
             Planning of Changes
           </MenuItem>
         </SubMenu>
-
         <SubMenu label='Clause7' icon={<i className='tabler-award-filled' />}>
           <MenuItem href='/Clause7/Resources' icon={<>👥</>}>
             Resources
@@ -134,10 +131,14 @@ const VerticalMenu = ({ scrollMenu }) => {
             Documented Information
           </MenuItem>
         </SubMenu>
-
-        <MenuItem href='/Clause8' icon={<i className='tabler-award-filled' />}>
-          Clause8
-        </MenuItem>
+        <SubMenu label='Clause8' icon={<i className='tabler-award-filled' />}>
+          <MenuItem href='/Clause8/Operational_planning_and_control' icon={<>?</>}>
+            Operational planning and control
+          </MenuItem>
+          <MenuItem href='/Clause8/Information_security_risk_assessment_and_treatment' icon={<>?</>}>
+            Information security risk assessment and treatment
+          </MenuItem>
+        </SubMenu>
         <SubMenu label='Clause9' icon={<i className='tabler-award-filled' />}>
           <MenuItem href='/Clause9/Monitoring' icon={<>?</>}>
             Monitoring
