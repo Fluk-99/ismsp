@@ -69,7 +69,7 @@ export default function AuditChecklist() {
   const fetchChecklists = async () => {
     setLoading(true)
     try {
-      const response = await fetch('http://192.168.0.119:3000/api/9PE/audit-checklist/')
+      const response = await fetch('https://ismsp-backend.onrender.com/api/9PE/audit-checklist/')
 
       if (!response.ok) {
         throw new Error(`API responded with status: ${response.status}`)
@@ -213,10 +213,10 @@ export default function AuditChecklist() {
 
       let url, method
       if (dialogMode === 'create') {
-        url = 'http://192.168.0.119:3000/api/9PE/audit-checklist/create'
+        url = 'https://ismsp-backend.onrender.com/api/9PE/audit-checklist/create'
         method = 'POST'
       } else {
-        url = `http://192.168.0.119:3000/api/9PE/audit-checklist/${currentChecklist._id}`
+        url = `https://ismsp-backend.onrender.com/api/9PE/audit-checklist/${currentChecklist._id}`
         method = 'PUT'
       }
 
@@ -258,9 +258,12 @@ export default function AuditChecklist() {
     }
 
     try {
-      const response = await fetch(`http://192.168.0.119:3000/api/9PE/audit-checklist/${currentChecklist._id}`, {
-        method: 'DELETE'
-      })
+      const response = await fetch(
+        `https://ismsp-backend.onrender.com/api/9PE/audit-checklist/${currentChecklist._id}`,
+        {
+          method: 'DELETE'
+        }
+      )
 
       if (!response.ok) {
         throw new Error('Failed to delete checklist')

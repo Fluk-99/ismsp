@@ -33,7 +33,7 @@ import DescriptionIcon from '@mui/icons-material/Description'
 import BusinessIcon from '@mui/icons-material/Business'
 import PersonIcon from '@mui/icons-material/Person'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://192.168.0.119:3000/api'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://ismsp-backend.onrender.com/api'
 
 const ImprovementForm = () => {
   const [correctiveActions, setCorrectiveActions] = useState([])
@@ -1337,7 +1337,7 @@ const ImprovementForm = () => {
                     {action.reportFile?.filePath && (
                       <Typography variant='body2' sx={{ mt: 1 }}>
                         <Link
-                          href={`http://192.168.0.119:3000${action.reportFile.filePath.replace(/\\/g, '/')}`}
+                          href={`https://ismsp-backend.onrender.com${action.reportFile.filePath.replace(/\\/g, '/')}`}
                           target='_blank'
                           rel='noopener noreferrer'
                           sx={{ display: 'flex', alignItems: 'center' }}
@@ -1351,7 +1351,7 @@ const ImprovementForm = () => {
                     {action.planFile?.filePath && (
                       <Typography variant='body2' sx={{ mt: 0.5 }}>
                         <Link
-                          href={`http://192.168.0.119:3000${action.planFile.filePath.replace(/\\/g, '/')}`}
+                          href={`https://ismsp-backend.onrender.com${action.planFile.filePath.replace(/\\/g, '/')}`}
                           target='_blank'
                           rel='noopener noreferrer'
                           sx={{ display: 'flex', alignItems: 'center' }}

@@ -86,7 +86,7 @@ const ChangePlanPage = () => {
   const [detailDialog, setDetailDialog] = useState({ open: false, plan: null })
 
   // Base URL for API
-  const baseUrl = 'http://192.168.0.119:3000'
+  const baseUrl = 'https://ismsp-backend.onrender.com'
 
   // Fetch all change plans
   const fetchChangePlans = async () => {

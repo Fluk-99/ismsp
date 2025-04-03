@@ -215,7 +215,7 @@ export default function RiskManagementPage() {
     setLoading(true)
     setError(null)
     try {
-      const response = await fetch('http://192.168.0.119:3000/api/8OPER/risk-entry')
+      const response = await fetch('https://ismsp-backend.onrender.com/api/8OPER/risk-entry')
 
       if (!response.ok) {
         throw new Error('ไม่สามารถดึงข้อมูลรายการความเสี่ยงได้')
@@ -234,7 +234,7 @@ export default function RiskManagementPage() {
   // Fetch assets from API
   const fetchAssets = async () => {
     try {
-      const response = await fetch('http://192.168.0.119:3000/api/7SUPP/resource/files')
+      const response = await fetch('https://ismsp-backend.onrender.com/api/7SUPP/resource/files')
 
       if (!response.ok) {
         throw new Error('ไม่สามารถดึงข้อมูลสินทรัพย์ได้')
@@ -259,7 +259,7 @@ export default function RiskManagementPage() {
   // Fetch risk criteria from API
   const fetchRiskCriteria = async () => {
     try {
-      const response = await fetch('http://192.168.0.119:3000/api/6PLAN/risk-criteria')
+      const response = await fetch('https://ismsp-backend.onrender.com/api/6PLAN/risk-criteria')
       if (!response.ok) {
         throw new Error('ไม่สามารถดึงข้อมูลเกณฑ์ความเสี่ยงได้')
       }
@@ -275,7 +275,7 @@ export default function RiskManagementPage() {
   // Fetch risk assessment from API
   const fetchRiskAssessment = async () => {
     try {
-      const response = await fetch('http://192.168.0.119:3000/api/6PLAN/risk-assessment')
+      const response = await fetch('https://ismsp-backend.onrender.com/api/6PLAN/risk-assessment')
       if (!response.ok) {
         throw new Error('ไม่สามารถดึงข้อมูลการประเมินความเสี่ยงได้')
       }
@@ -654,7 +654,7 @@ export default function RiskManagementPage() {
       let message
 
       if (isEditMode) {
-        response = await fetch(`http://192.168.0.119:3000/api/8OPER/risk-entry/${selectedRiskEntry._id}`, {
+        response = await fetch(`https://ismsp-backend.onrender.com/api/8OPER/risk-entry/${selectedRiskEntry._id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'
@@ -663,7 +663,7 @@ export default function RiskManagementPage() {
         })
         message = 'อัปเดตรายการประเมินความเสี่ยงสำเร็จ'
       } else {
-        response = await fetch('http://192.168.0.119:3000/api/8OPER/risk-entry', {
+        response = await fetch('https://ismsp-backend.onrender.com/api/8OPER/risk-entry', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -716,7 +716,7 @@ export default function RiskManagementPage() {
     setLoading(true)
 
     try {
-      const response = await fetch(`http://192.168.0.119:3000/api/8OPER/risk-entry/${id}`, {
+      const response = await fetch(`https://ismsp-backend.onrender.com/api/8OPER/risk-entry/${id}`, {
         method: 'DELETE'
       })
 
@@ -831,7 +831,7 @@ export default function RiskManagementPage() {
 
       if (isTreatmentEditMode) {
         response = await fetch(
-          `http://192.168.0.119:3000/api/8OPER/risk-entry/${selectedRiskEntry._id}/treatment-plans/${selectedTreatmentPlan._id}`,
+          `https://ismsp-backend.onrender.com/api/8OPER/risk-entry/${selectedRiskEntry._id}/treatment-plans/${selectedTreatmentPlan._id}`,
           {
             method: 'PUT',
             headers: {
@@ -843,7 +843,7 @@ export default function RiskManagementPage() {
         message = 'อัปเดตแผนการจัดการความเสี่ยงสำเร็จ'
       } else {
         response = await fetch(
-          `http://192.168.0.119:3000/api/8OPER/risk-entry/${selectedRiskEntry._id}/treatment-plans`,
+          `https://ismsp-backend.onrender.com/api/8OPER/risk-entry/${selectedRiskEntry._id}/treatment-plans`,
           {
             method: 'POST',
             headers: {
@@ -899,7 +899,7 @@ export default function RiskManagementPage() {
 
     try {
       const response = await fetch(
-        `http://192.168.0.119:3000/api/8OPER/risk-entry/${selectedRiskEntry._id}/treatment-plans/${planId}`,
+        `https://ismsp-backend.onrender.com/api/8OPER/risk-entry/${selectedRiskEntry._id}/treatment-plans/${planId}`,
         {
           method: 'DELETE'
         }

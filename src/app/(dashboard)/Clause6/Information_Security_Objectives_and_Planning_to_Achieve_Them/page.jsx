@@ -97,7 +97,7 @@ const RiskAssessmentPage = () => {
   const fetchRiskAssessments = async () => {
     try {
       setLoading(true)
-      const response = await fetch('http://192.168.0.119:3000/api/6PLAN/risk-assessment')
+      const response = await fetch('https://ismsp-backend.onrender.com/api/6PLAN/risk-assessment')
       const result = await response.json()
 
       if (result.success) {
@@ -116,7 +116,7 @@ const RiskAssessmentPage = () => {
   // Fetch assessment by ID
   const fetchAssessmentById = async (id, viewOnly = false) => {
     try {
-      const response = await fetch(`http://192.168.0.119:3000/api/6PLAN/risk-assessment/${id}`)
+      const response = await fetch(`https://ismsp-backend.onrender.com/api/6PLAN/risk-assessment/${id}`)
       const result = await response.json()
 
       if (result.success) {
@@ -148,7 +148,7 @@ const RiskAssessmentPage = () => {
   // Create new risk assessment
   const createRiskAssessment = async () => {
     try {
-      const response = await fetch('http://192.168.0.119:3000/api/6PLAN/risk-assessment', {
+      const response = await fetch('https://ismsp-backend.onrender.com/api/6PLAN/risk-assessment', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -174,13 +174,16 @@ const RiskAssessmentPage = () => {
   // Update risk assessment
   const updateRiskAssessment = async () => {
     try {
-      const response = await fetch(`http://192.168.0.119:3000/api/6PLAN/risk-assessment/${currentAssessmentId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
-      })
+      const response = await fetch(
+        `https://ismsp-backend.onrender.com/api/6PLAN/risk-assessment/${currentAssessmentId}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formData)
+        }
+      )
 
       const result = await response.json()
 
@@ -200,7 +203,7 @@ const RiskAssessmentPage = () => {
   // Delete risk assessment
   const deleteRiskAssessment = async id => {
     try {
-      const response = await fetch(`http://192.168.0.119:3000/api/6PLAN/risk-assessment/${id}`, {
+      const response = await fetch(`https://ismsp-backend.onrender.com/api/6PLAN/risk-assessment/${id}`, {
         method: 'DELETE'
       })
 
@@ -816,7 +819,6 @@ const RiskAssessmentPage = () => {
                                 fullWidth
                                 multiline
                                 rows={3}
-
                               />
                             </Grid>
 

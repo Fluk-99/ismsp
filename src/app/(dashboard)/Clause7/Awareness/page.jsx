@@ -27,7 +27,7 @@ import AddCircleOutline from '@mui/icons-material/AddCircleOutline'
 import DeleteIcon from '@mui/icons-material/Delete'
 import SaveIcon from '@mui/icons-material/Save'
 
-const API_BASE_URL = 'http://192.168.0.119:3000/api'
+const API_BASE_URL = 'https://ismsp-backend.onrender.com/api'
 
 const Awareness = () => {
   const [employees, setEmployees] = useState([])

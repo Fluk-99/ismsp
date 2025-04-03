@@ -7,7 +7,7 @@ import DeleteIcon from '@mui/icons-material/Delete'
 import AddIcon from '@mui/icons-material/Add'
 import 'react-toastify/dist/ReactToastify.css'
 
-const BASE_URL = 'http://192.168.0.119:3000/api/settings/department'
+const BASE_URL = 'https://ismsp-backend.onrender.com/api/settings/department'
 
 const Department_C = () => {
   const [departments, setDepartments] = useState([])

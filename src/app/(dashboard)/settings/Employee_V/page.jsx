@@ -1,58 +1,69 @@
-"use client";
+'use client'
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Typography, CircularProgress, Box } from "@mui/material";
-import SpeedDial from "@mui/material/SpeedDial";
-import SpeedDialIcon from "@mui/material/SpeedDialIcon";
-import SpeedDialAction from "@mui/material/SpeedDialAction";
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Typography,
+  CircularProgress,
+  Box
+} from '@mui/material'
+import SpeedDial from '@mui/material/SpeedDial'
+import SpeedDialIcon from '@mui/material/SpeedDialIcon'
+import SpeedDialAction from '@mui/material/SpeedDialAction'
 
 const actions = [
-  { icon: "📋", name: "Share" },
-  { icon: "🖨️", name: "Export" },
-  { icon: "✏️", name: "Edit", path: "Employee_C" }, //
-];
+  { icon: '📋', name: 'Share' },
+  { icon: '🖨️', name: 'Export' },
+  { icon: '✏️', name: 'Edit', path: 'Employee_C' } //
+]
 
 const Employee_V = () => {
-  const [employees, setEmployees] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const [employees, setEmployees] = useState([])
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const response = await fetch("http://192.168.0.119:3000/api/settings/employee");
-        if (!response.ok) throw new Error("Failed to fetch data");
-        const data = await response.json();
+        const response = await fetch('https://ismsp-backend.onrender.com/api/settings/employee')
+        if (!response.ok) throw new Error('Failed to fetch data')
+        const data = await response.json()
 
-        console.log("Fetched Employees:", data.data); // Debugging
+        console.log('Fetched Employees:', data.data) // Debugging
 
         // ✅ ใช้ชื่อ department และ subDepartment แทน ID
         const processedEmployees = data.data.map(emp => ({
           ...emp,
-          department: emp.department?.name || "N/A", // ✅ ใช้ชื่อแผนก
-          subDepartment: emp.subDepartment?.name || "N/A", // ✅ ใช้ชื่อหน่วยย่อย
-        }));
+          department: emp.department?.name || 'N/A', // ✅ ใช้ชื่อแผนก
+          subDepartment: emp.subDepartment?.name || 'N/A' // ✅ ใช้ชื่อหน่วยย่อย
+        }))
 
-        setEmployees(processedEmployees);
+        setEmployees(processedEmployees)
       } catch (error) {
-        console.error("Error fetching employees:", error);
+        console.error('Error fetching employees:', error)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
-    fetchEmployees();
-  }, []);
+    fetchEmployees()
+  }, [])
 
   return (
-    <Box sx={{ padding: "20px", maxWidth: "1100px", margin: "0 auto", position: "relative" }}>
-      <Typography variant="h4" align="center" gutterBottom>
+    <Box sx={{ padding: '20px', maxWidth: '1100px', margin: '0 auto', position: 'relative' }}>
+      <Typography variant='h4' align='center' gutterBottom>
         Employee List
       </Typography>
 
       {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", marginTop: "20px" }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
           <CircularProgress />
         </Box>
       ) : (
@@ -76,14 +87,13 @@ const Employee_V = () => {
                     <TableCell>{emp.employeeId}</TableCell>
                     <TableCell>{emp.name}</TableCell>
                     <TableCell>{emp.position}</TableCell>
-                    <TableCell>{emp.department }</TableCell> {/* ✅ แก้ไขให้ตรวจสอบค่า */}
+                    <TableCell>{emp.department}</TableCell> {/* ✅ แก้ไขให้ตรวจสอบค่า */}
                     <TableCell>{emp.subDepartment}</TableCell> {/* ✅ แก้ไขให้ตรวจสอบค่า */}
                   </TableRow>
-
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} align="center">
+                  <TableCell colSpan={6} align='center'>
                     No Data Available
                   </TableCell>
                 </TableRow>
@@ -95,11 +105,11 @@ const Employee_V = () => {
 
       {/* SpeedDial เพิ่มเข้ามา */}
       <SpeedDial
-        ariaLabel="SpeedDial openIcon example"
-        sx={{ position: "fixed", bottom: 16, right: 16 }}
+        ariaLabel='SpeedDial openIcon example'
+        sx={{ position: 'fixed', bottom: 16, right: 16 }}
         icon={<SpeedDialIcon />}
       >
-        {actions.map((action) => (
+        {actions.map(action => (
           <SpeedDialAction
             key={action.name}
             icon={<span>{action.icon}</span>}
@@ -110,7 +120,7 @@ const Employee_V = () => {
         ))}
       </SpeedDial>
     </Box>
-  );
-};
+  )
+}
 
-export default Employee_V;
+export default Employee_V

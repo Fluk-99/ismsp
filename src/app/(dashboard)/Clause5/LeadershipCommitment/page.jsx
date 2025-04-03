@@ -34,7 +34,7 @@ export default function LeadershipCommitment() {
 
   const fetchCommitments = async () => {
     try {
-      const response = await fetch('http://192.168.0.119:3000/api/5LEAD/leadership-commitment')
+      const response = await fetch('https://ismsp-backend.onrender.com/api/5LEAD/leadership-commitment')
       const data = await response.json()
       console.log('Data from API:', data)
       if (Array.isArray(data)) {
@@ -65,7 +65,7 @@ export default function LeadershipCommitment() {
     if (signatures) formData.append('signatures', signatures)
 
     try {
-      const response = await fetch('http://192.168.0.119:3000/api/5LEAD/leadership-commitment/create', {
+      const response = await fetch('https://ismsp-backend.onrender.com/api/5LEAD/leadership-commitment/create', {
         method: 'POST',
         body: formData
       })
@@ -85,7 +85,7 @@ export default function LeadershipCommitment() {
   const handleDelete = async id => {
     if (!window.confirm('คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลนี้?')) return
     try {
-      const response = await fetch(`http://192.168.0.119:3000/api/5LEAD/leadership-commitment/${id}`, {
+      const response = await fetch(`https://ismsp-backend.onrender.com/api/5LEAD/leadership-commitment/${id}`, {
         method: 'DELETE'
       })
       if (!response.ok) throw new Error('Failed to delete data')
@@ -210,7 +210,7 @@ export default function LeadershipCommitment() {
               <p>
                 <strong>Attachment:</strong>{' '}
                 <Link
-                  href={`http://192.168.0.119:3000/${commitment.attachments.replace(/\\/g, '/')}`}
+                  href={`https://ismsp-backend.onrender.com/${commitment.attachments.replace(/\\/g, '/')}`}
                   target='_blank'
                   color='primary'
                   fontWeight='bold'
@@ -223,7 +223,7 @@ export default function LeadershipCommitment() {
               <p>
                 <strong>Signature:</strong>{' '}
                 <Link
-                  href={`http://192.168.0.119:3000/${commitment.signatures.replace(/\\/g, '/')}`}
+                  href={`https://ismsp-backend.onrender.com/${commitment.signatures.replace(/\\/g, '/')}`}
                   target='_blank'
                   color='primary'
                   fontWeight='bold'

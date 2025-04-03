@@ -21,7 +21,7 @@ import SpeedDialAction from '@mui/material/SpeedDialAction'
 import { toast, ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 
-const API_URL = 'http://192.168.0.119:3000/api/settings/soa'
+const API_URL = 'https://ismsp-backend.onrender.com/api/settings/soa'
 
 const actions = [
   { icon: '📋', name: 'Share' },

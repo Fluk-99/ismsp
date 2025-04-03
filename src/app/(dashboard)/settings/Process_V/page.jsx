@@ -1,7 +1,7 @@
-"use client";
+'use client'
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   Table,
   TableBody,
@@ -12,63 +12,64 @@ import {
   Paper,
   Typography,
   CircularProgress,
-  Box,
-} from "@mui/material";
-import SpeedDial from "@mui/material/SpeedDial";
-import SpeedDialIcon from "@mui/material/SpeedDialIcon";
-import SpeedDialAction from "@mui/material/SpeedDialAction";
+  Box
+} from '@mui/material'
+import SpeedDial from '@mui/material/SpeedDial'
+import SpeedDialIcon from '@mui/material/SpeedDialIcon'
+import SpeedDialAction from '@mui/material/SpeedDialAction'
 
 const actions = [
-  { icon: "📋", name: "Share" },
-  { icon: "🖨️", name: "Export" },
-  { icon: "✏️", name: "Edit", path: "Process_C" },
-];
+  { icon: '📋', name: 'Share' },
+  { icon: '🖨️', name: 'Export' },
+  { icon: '✏️', name: 'Edit', path: 'Process_C' }
+]
 
 const Process_V = () => {
-  const [processes, setProcesses] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const [processes, setProcesses] = useState([])
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
   useEffect(() => {
     const fetchProcesses = async () => {
       try {
-        const response = await fetch("http://192.168.0.119:3000/api/settings/process");
-        if (!response.ok) throw new Error("Failed to fetch data");
+        const response = await fetch('https://ismsp-backend.onrender.com/api/settings/process')
+        if (!response.ok) throw new Error('Failed to fetch data')
 
-        const result = await response.json();
-        if (!Array.isArray(result.data)) throw new Error("Invalid data format");
+        const result = await response.json()
+        if (!Array.isArray(result.data)) throw new Error('Invalid data format')
 
-        console.log("🔎 API Response Received:", result.data);
+        console.log('🔎 API Response Received:', result.data)
 
-        const formattedData = result.data.map((process) => ({
+        const formattedData = result.data.map(process => ({
           processId: process.processId,
           name: process.name,
-          details: process.details || "N/A",
-          department: process.department?.name || "N/A",
-          subDepartment: process.subDepartment && typeof process.subDepartment === "object"
-            ? process.subDepartment.name || "N/A"
-            : "N/A",
-        }));
+          details: process.details || 'N/A',
+          department: process.department?.name || 'N/A',
+          subDepartment:
+            process.subDepartment && typeof process.subDepartment === 'object'
+              ? process.subDepartment.name || 'N/A'
+              : 'N/A'
+        }))
 
-        setProcesses(formattedData);
+        setProcesses(formattedData)
       } catch (error) {
-        console.error("Error fetching Processes:", error);
+        console.error('Error fetching Processes:', error)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
-    fetchProcesses();
-  }, []);
+    fetchProcesses()
+  }, [])
 
   return (
-    <Box sx={{ padding: "20px", maxWidth: "1100px", margin: "0 auto", position: "relative" }}>
-      <Typography variant="h4" align="center" gutterBottom>
+    <Box sx={{ padding: '20px', maxWidth: '1100px', margin: '0 auto', position: 'relative' }}>
+      <Typography variant='h4' align='center' gutterBottom>
         Process List
       </Typography>
 
       {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", marginTop: "20px" }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
           <CircularProgress />
         </Box>
       ) : (
@@ -90,19 +91,19 @@ const Process_V = () => {
                   <TableRow key={process.processId}>
                     <TableCell>{index + 1}</TableCell>
                     <TableCell>{process.processId}</TableCell>
-                    <TableCell sx={{ wordWrap: "break-word", whiteSpace: "normal", maxWidth: "180px" }}>
+                    <TableCell sx={{ wordWrap: 'break-word', whiteSpace: 'normal', maxWidth: '180px' }}>
                       {process.name}
                     </TableCell>
-                    <TableCell sx={{ wordWrap: "break-word", whiteSpace: "normal", maxWidth: "200px" }}>
+                    <TableCell sx={{ wordWrap: 'break-word', whiteSpace: 'normal', maxWidth: '200px' }}>
                       {process.details}
                     </TableCell>
                     <TableCell>{process.department}</TableCell>
-                    <TableCell>{process.subDepartment || "N/A"}</TableCell>
+                    <TableCell>{process.subDepartment || 'N/A'}</TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} align="center">
+                  <TableCell colSpan={6} align='center'>
                     No Data Available
                   </TableCell>
                 </TableRow>
@@ -114,11 +115,11 @@ const Process_V = () => {
 
       {/* SpeedDial Floating Action Button */}
       <SpeedDial
-        ariaLabel="SpeedDial openIcon example"
-        sx={{ position: "fixed", bottom: 16, right: 16 }}
+        ariaLabel='SpeedDial openIcon example'
+        sx={{ position: 'fixed', bottom: 16, right: 16 }}
         icon={<SpeedDialIcon />}
       >
-        {actions.map((action) => (
+        {actions.map(action => (
           <SpeedDialAction
             key={action.name}
             icon={<span>{action.icon}</span>}
@@ -129,7 +130,7 @@ const Process_V = () => {
         ))}
       </SpeedDial>
     </Box>
-  );
-};
+  )
+}
 
-export default Process_V;
+export default Process_V

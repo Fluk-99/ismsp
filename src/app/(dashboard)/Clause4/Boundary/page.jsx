@@ -62,7 +62,7 @@ export default function BoundaryManagement() {
   const fetchSoaOptions = async () => {
     try {
       setLoading(true)
-      const response = await fetch('http://192.168.0.119:3000/api/settings/soa')
+      const response = await fetch('https://ismsp-backend.onrender.com/api/settings/soa')
       const result = await response.json()
 
       console.log('SOA Options:', result.data)
@@ -88,7 +88,7 @@ export default function BoundaryManagement() {
   const fetchBoundaries = async () => {
     try {
       setLoading(true)
-      const response = await fetch('http://192.168.0.119:3000/api/4COTO/boundary/')
+      const response = await fetch('https://ismsp-backend.onrender.com/api/4COTO/boundary/')
       const result = await response.json()
 
       console.log('📥 Fetched Boundary Data:', JSON.stringify(result, null, 2))
@@ -220,7 +220,7 @@ export default function BoundaryManagement() {
         return
       }
 
-      const response = await fetch('http://192.168.0.119:3000/api/4COTO/boundary/save', {
+      const response = await fetch('https://ismsp-backend.onrender.com/api/4COTO/boundary/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(boundary)

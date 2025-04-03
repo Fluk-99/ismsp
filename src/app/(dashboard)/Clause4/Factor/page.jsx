@@ -66,7 +66,7 @@ export default function FactorManagement() {
 
   const fetchFactors = async () => {
     try {
-      const response = await fetch('http://192.168.0.119:3000/api/4COTO/factor')
+      const response = await fetch('https://ismsp-backend.onrender.com/api/4COTO/factor')
       const result = await response.json()
 
       if (result.data && result.data.length > 0) {
@@ -160,8 +160,8 @@ export default function FactorManagement() {
       // ส่งข้อมูลไป API
       const method = factorId ? 'PUT' : 'POST'
       const url = factorId
-        ? `http://192.168.0.119:3000/api/4COTO/factor/${factorId}`
-        : 'http://192.168.0.119:3000/api/4COTO/factor/create'
+        ? `https://ismsp-backend.onrender.com/api/4COTO/factor/${factorId}`
+        : 'https://ismsp-backend.onrender.com/api/4COTO/factor/create'
 
       const response = await fetch(url, {
         method,
@@ -210,7 +210,7 @@ export default function FactorManagement() {
       }
 
       // ส่งข้อมูลไป API
-      const response = await fetch(`http://192.168.0.119:3000/api/4COTO/factor/${factorId}`, {
+      const response = await fetch(`https://ismsp-backend.onrender.com/api/4COTO/factor/${factorId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -253,7 +253,7 @@ export default function FactorManagement() {
       if (confirmChange) {
         try {
           // อัปเดตข้อมูลในฐานข้อมูล
-          const response = await fetch(`http://192.168.0.119:3000/api/4COTO/factor/${factorId}`, {
+          const response = await fetch(`https://ismsp-backend.onrender.com/api/4COTO/factor/${factorId}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

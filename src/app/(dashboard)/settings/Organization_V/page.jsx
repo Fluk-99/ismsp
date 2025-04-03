@@ -1,48 +1,59 @@
-"use client";
+'use client'
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Typography, CircularProgress, Box } from "@mui/material";
-import SpeedDial from "@mui/material/SpeedDial";
-import SpeedDialIcon from "@mui/material/SpeedDialIcon";
-import SpeedDialAction from "@mui/material/SpeedDialAction";
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Typography,
+  CircularProgress,
+  Box
+} from '@mui/material'
+import SpeedDial from '@mui/material/SpeedDial'
+import SpeedDialIcon from '@mui/material/SpeedDialIcon'
+import SpeedDialAction from '@mui/material/SpeedDialAction'
 
 const actions = [
-  { icon: "📋", name: "Share" },
-  { icon: "🖨️", name: "Export" },
-  { icon: "✏️", name: "Edit", path: "Organization_C" }, // ✅ กดแล้วไปที่หน้า Organization_C
-];
+  { icon: '📋', name: 'Share' },
+  { icon: '🖨️', name: 'Export' },
+  { icon: '✏️', name: 'Edit', path: 'Organization_C' } // ✅ กดแล้วไปที่หน้า Organization_C
+]
 
 const OrganizationTable = () => {
-  const [organizations, setOrganizations] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const [organizations, setOrganizations] = useState([])
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
   useEffect(() => {
     const fetchOrganizations = async () => {
       try {
-        const response = await fetch("http://192.168.0.119:3000/api/settings/organization");
-        if (!response.ok) throw new Error("Failed to fetch data");
-        const data = await response.json();
-        setOrganizations(data.data); // ใช้ `data.data` เพราะ JSON API ห่อข้อมูลใน key `data`
+        const response = await fetch('https://ismsp-backend.onrender.com/api/settings/organization')
+        if (!response.ok) throw new Error('Failed to fetch data')
+        const data = await response.json()
+        setOrganizations(data.data) // ใช้ `data.data` เพราะ JSON API ห่อข้อมูลใน key `data`
       } catch (error) {
-        console.error("Error fetching organizations:", error);
+        console.error('Error fetching organizations:', error)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
-    fetchOrganizations();
-  }, []);
+    fetchOrganizations()
+  }, [])
 
   return (
-    <Box sx={{ padding: "20px", maxWidth: "1100px", margin: "0 auto", position: "relative" }}>
-      <Typography variant="h4" align="center" gutterBottom>
+    <Box sx={{ padding: '20px', maxWidth: '1100px', margin: '0 auto', position: 'relative' }}>
+      <Typography variant='h4' align='center' gutterBottom>
         Organization List
       </Typography>
 
       {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", marginTop: "20px" }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', marginTop: '20px' }}>
           <CircularProgress />
         </Box>
       ) : (
@@ -72,7 +83,7 @@ const OrganizationTable = () => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} align="center">
+                  <TableCell colSpan={6} align='center'>
                     No Data Available
                   </TableCell>
                 </TableRow>
@@ -84,11 +95,11 @@ const OrganizationTable = () => {
 
       {/* SpeedDial เพิ่มเข้ามา */}
       <SpeedDial
-        ariaLabel="SpeedDial openIcon example"
-        sx={{ position: "fixed", bottom: 16, right: 16 }}
+        ariaLabel='SpeedDial openIcon example'
+        sx={{ position: 'fixed', bottom: 16, right: 16 }}
         icon={<SpeedDialIcon />}
       >
-        {actions.map((action) => (
+        {actions.map(action => (
           <SpeedDialAction
             key={action.name}
             icon={<span>{action.icon}</span>}
@@ -99,7 +110,7 @@ const OrganizationTable = () => {
         ))}
       </SpeedDial>
     </Box>
-  );
-};
+  )
+}
 
-export default OrganizationTable;
+export default OrganizationTable

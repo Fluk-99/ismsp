@@ -69,7 +69,7 @@ const RiskCriteriaPage = () => {
   const fetchRiskCriteria = async () => {
     try {
       setLoading(true)
-      const response = await fetch('http://192.168.0.119:3000/api/6PLAN/risk-criteria')
+      const response = await fetch('https://ismsp-backend.onrender.com/api/6PLAN/risk-criteria')
       const result = await response.json()
 
       if (result.success) {
@@ -88,7 +88,7 @@ const RiskCriteriaPage = () => {
   // Fetch criteria by ID
   const fetchCriteriaById = async id => {
     try {
-      const response = await fetch(`http://192.168.0.119:3000/api/6PLAN/risk-criteria/${id}`)
+      const response = await fetch(`https://ismsp-backend.onrender.com/api/6PLAN/risk-criteria/${id}`)
       const result = await response.json()
 
       if (result.success) {
@@ -108,7 +108,7 @@ const RiskCriteriaPage = () => {
   // Create new risk criteria
   const createRiskCriteria = async () => {
     try {
-      const response = await fetch('http://192.168.0.119:3000/api/6PLAN/risk-criteria', {
+      const response = await fetch('https://ismsp-backend.onrender.com/api/6PLAN/risk-criteria', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -134,7 +134,7 @@ const RiskCriteriaPage = () => {
   // Update risk criteria
   const updateRiskCriteria = async () => {
     try {
-      const response = await fetch(`http://192.168.0.119:3000/api/6PLAN/risk-criteria/${currentCriteriaId}`, {
+      const response = await fetch(`https://ismsp-backend.onrender.com/api/6PLAN/risk-criteria/${currentCriteriaId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json'
@@ -160,7 +160,7 @@ const RiskCriteriaPage = () => {
   // Delete risk criteria
   const deleteRiskCriteria = async id => {
     try {
-      const response = await fetch(`http://192.168.0.119:3000/api/6PLAN/risk-criteria/${id}`, {
+      const response = await fetch(`https://ismsp-backend.onrender.com/api/6PLAN/risk-criteria/${id}`, {
         method: 'DELETE'
       })
 

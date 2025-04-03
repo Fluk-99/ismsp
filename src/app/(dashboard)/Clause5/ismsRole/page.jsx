@@ -20,7 +20,7 @@ import 'react-toastify/dist/ReactToastify.css'
 import CloudUploadIcon from '@mui/icons-material/CloudUpload'
 
 // API Endpoints
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://192.168.0.119:3000/api'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://ismsp-backend.onrender.com/api'
 const ENDPOINTS = {
   EMPLOYEE: `${API_URL}/settings/employee`,
   ISMS_ROLE: `${API_URL}/5LEAD/isms-roles`

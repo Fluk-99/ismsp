@@ -28,7 +28,7 @@ import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import DescriptionIcon from '@mui/icons-material/Description'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://192.168.0.119:3000/api'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://ismsp-backend.onrender.com/api'
 
 const Competence = () => {
   const [employees, setEmployees] = useState([])
@@ -579,7 +579,7 @@ const Competence = () => {
 }
 
 function FileUploadField({ onChange, disabled, fileName, filePath }) {
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://192.168.0.119:3000/api'
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://ismsp-backend.onrender.com/api'
 
   // สร้างลิงค์ดาวน์โหลด
   const downloadLink = filePath ? `${API_BASE_URL}${filePath}` : null

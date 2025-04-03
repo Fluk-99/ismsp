@@ -57,7 +57,7 @@ export default function PerformanceEvaluation() {
 
   const fetchAllData = async () => {
     try {
-      const response = await fetch('http://192.168.0.119:3000/api/9PE/managementReview/')
+      const response = await fetch('https://ismsp-backend.onrender.com/api/9PE/managementReview/')
       const result = await response.json()
 
       if (result.data) {
@@ -188,8 +188,8 @@ export default function PerformanceEvaluation() {
 
     try {
       const url = isEditing
-        ? `http://192.168.0.119:3000/api/9PE/managementReview/${form._id}`
-        : 'http://192.168.0.119:3000/api/9PE/managementReview/create'
+        ? `https://ismsp-backend.onrender.com/api/9PE/managementReview/${form._id}`
+        : 'https://ismsp-backend.onrender.com/api/9PE/managementReview/create'
 
       const method = isEditing ? 'PUT' : 'POST'
 
@@ -222,7 +222,7 @@ export default function PerformanceEvaluation() {
     if (!confirmDelete) return
 
     try {
-      const response = await fetch(`http://192.168.0.119:3000/api/9PE/managementReview/${id}`, {
+      const response = await fetch(`https://ismsp-backend.onrender.com/api/9PE/managementReview/${id}`, {
         method: 'DELETE'
       })
 

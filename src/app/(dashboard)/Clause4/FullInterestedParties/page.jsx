@@ -39,7 +39,7 @@ export default function InterestedPartiesManagement() {
   const [error, setError] = useState(null)
 
   // Base API URL
-  const API_BASE_URL = 'http://192.168.0.119:3000/api'
+  const API_BASE_URL = 'https://ismsp-backend.onrender.com/api'
 
   useEffect(() => {
     fetchInterestedParties()

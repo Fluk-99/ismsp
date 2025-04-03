@@ -6,8 +6,8 @@ import { toast, ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 
 // API Endpoints
-const API_URL = 'http://192.168.0.119:3000/api/settings/employee'
-const DEPARTMENT_API_URL = 'http://192.168.0.119:3000/api/settings/department'
+const API_URL = 'https://ismsp-backend.onrender.com/api/settings/employee'
+const DEPARTMENT_API_URL = 'https://ismsp-backend.onrender.com/api/settings/department'
 
 const Employee_C = () => {
   const [employees, setEmployees] = useState([])

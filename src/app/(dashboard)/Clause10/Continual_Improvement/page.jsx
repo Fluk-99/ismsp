@@ -35,7 +35,7 @@ import DescriptionIcon from '@mui/icons-material/Description'
 import BusinessIcon from '@mui/icons-material/Business'
 import PersonIcon from '@mui/icons-material/Person'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://192.168.0.119:3000/api'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://ismsp-backend.onrender.com/api'
 
 const ContinualImprovement = () => {
   const [improvements, setImprovements] = useState([])
@@ -893,7 +893,7 @@ const ContinualImprovement = () => {
                             <p>
                               <strong>reportFile:</strong>{' '}
                               <a
-                                href={`http://192.168.0.119:3000${improvement.reportFile.filePath.replace(/\\/g, '/')}`}
+                                href={`https://ismsp-backend.onrender.com${improvement.reportFile.filePath.replace(/\\/g, '/')}`}
                                 target='_blank'
                                 rel='noopener noreferrer'
                                 style={{ color: 'blue', fontWeight: 'bold' }}
@@ -906,7 +906,7 @@ const ContinualImprovement = () => {
                             <p>
                               <strong>planFile:</strong>{' '}
                               <a
-                                href={`http://192.168.0.119:3000${improvement.planFile.filePath.replace(/\\/g, '/')}`}
+                                href={`https://ismsp-backend.onrender.com${improvement.planFile.filePath.replace(/\\/g, '/')}`}
                                 target='_blank'
                                 rel='noopener noreferrer'
                                 style={{ color: 'blue', fontWeight: 'bold' }}
@@ -919,7 +919,7 @@ const ContinualImprovement = () => {
                             <p>
                               <strong>evidenceFile:</strong>{' '}
                               <a
-                                href={`http://192.168.0.119:3000${improvement.evidenceFile.filePath.replace(/\\/g, '/')}`}
+                                href={`https://ismsp-backend.onrender.com${improvement.evidenceFile.filePath.replace(/\\/g, '/')}`}
                                 target='_blank'
                                 rel='noopener noreferrer'
                                 style={{ color: 'blue', fontWeight: 'bold' }}
@@ -933,7 +933,7 @@ const ContinualImprovement = () => {
                             <p>
                               <strong>auditFile:</strong>{' '}
                               <a
-                                href={`http://192.168.0.119:3000${improvement.auditFile.filePath.replace(/\\/g, '/')}`}
+                                href={`https://ismsp-backend.onrender.com${improvement.auditFile.filePath.replace(/\\/g, '/')}`}
                                 target='_blank'
                                 rel='noopener noreferrer'
                                 style={{ color: 'blue', fontWeight: 'bold' }}

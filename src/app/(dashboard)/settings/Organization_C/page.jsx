@@ -7,8 +7,8 @@ import CancelIcon from '@mui/icons-material/Cancel'
 import 'react-toastify/dist/ReactToastify.css'
 
 // API URLs
-const API_URL = 'http://192.168.0.119:3000/api/settings/organization'
-const COMPANY_TYPES_URL = 'http://192.168.0.119:3000/api/settings/company-type'
+const API_URL = 'https://ismsp-backend.onrender.com/api/settings/organization'
+const COMPANY_TYPES_URL = 'https://ismsp-backend.onrender.com/api/settings/company-type'
 
 const Organization_C = () => {
   const [organizations, setOrganizations] = useState([])

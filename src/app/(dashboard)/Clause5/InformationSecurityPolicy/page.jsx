@@ -42,7 +42,7 @@ export default function InformationSecurityPolicy() {
   const fetchPolicies = async () => {
     setLoading(true)
     try {
-      const response = await fetch('http://192.168.0.119:3000/api/5LEAD/information-security-policy')
+      const response = await fetch('https://ismsp-backend.onrender.com/api/5LEAD/information-security-policy')
       const data = await response.json()
       if (Array.isArray(data)) {
         setPolicies(data)
@@ -104,7 +104,7 @@ export default function InformationSecurityPolicy() {
     if (attachment) formData.append('attachment', attachment)
 
     try {
-      const response = await fetch('http://192.168.0.119:3000/api/5LEAD/information-security-policy/create', {
+      const response = await fetch('https://ismsp-backend.onrender.com/api/5LEAD/information-security-policy/create', {
         method: 'POST',
         body: formData
       })
@@ -124,7 +124,7 @@ export default function InformationSecurityPolicy() {
     if (!window.confirm('คุณแน่ใจหรือไม่ว่าต้องการลบนโยบายนี้?')) return
     setLoading(true)
     try {
-      const response = await fetch(`http://192.168.0.119:3000/api/5LEAD/information-security-policy/${id}`, {
+      const response = await fetch(`https://ismsp-backend.onrender.com/api/5LEAD/information-security-policy/${id}`, {
         method: 'DELETE'
       })
       if (!response.ok) throw new Error('Failed to delete policy')
@@ -388,7 +388,7 @@ export default function InformationSecurityPolicy() {
                           size='small'
                           startIcon={<AttachFileIcon />}
                           component={Link}
-                          href={`http://192.168.0.119:3000/${policy.attachment.replace(/\\/g, '/')}`}
+                          href={`https://ismsp-backend.onrender.com/${policy.attachment.replace(/\\/g, '/')}`}
                           target='_blank'
                           sx={{ mt: 1 }}
                         >

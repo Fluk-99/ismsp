@@ -108,7 +108,7 @@ export default function PerformanceEvaluation() {
     }
 
     try {
-      const response = await fetch('http://192.168.0.119:3000/api/9PE/monitoring/create', {
+      const response = await fetch('https://ismsp-backend.onrender.com/api/9PE/monitoring/create', {
         method: 'POST',
         body: formData
       })
@@ -130,7 +130,7 @@ export default function PerformanceEvaluation() {
   // แก้ไขการแสดงผลข้อมูลที่โหลดมา
   const fetchAllData = async () => {
     try {
-      const response = await fetch('http://192.168.0.119:3000/api/9PE/monitoring/')
+      const response = await fetch('https://ismsp-backend.onrender.com/api/9PE/monitoring/')
       const result = await response.json()
 
       if (result.data) {
@@ -237,8 +237,8 @@ export default function PerformanceEvaluation() {
     try {
       // ✅ เลือก URL และ Method ตามกรณี (Create หรือ Update)
       const url = isEditing
-        ? `http://192.168.0.119:3000/api/9PE/monitoring/update/${form._id}`
-        : 'http://192.168.0.119:3000/api/9PE/monitoring/create'
+        ? `https://ismsp-backend.onrender.com/api/9PE/monitoring/update/${form._id}`
+        : 'https://ismsp-backend.onrender.com/api/9PE/monitoring/create'
 
       const method = isEditing ? 'PUT' : 'POST'
 
@@ -373,7 +373,7 @@ const handleAdditionalFileChange = (formIndex, fileIndex, event) => {
     if (!confirmDelete) return
 
     try {
-      const response = await fetch(`http://192.168.0.119:3000/api/9PE/monitoring/${id}`, {
+      const response = await fetch(`https://ismsp-backend.onrender.com/api/9PE/monitoring/${id}`, {
         method: 'DELETE'
       })
 

@@ -118,7 +118,7 @@ export default function InternalAudit() {
 
   const fetchEmployees = async () => {
     try {
-      const response = await fetch(`http://192.168.0.119:3000/api/settings/employee`)
+      const response = await fetch(`https://ismsp-backend.onrender.com/api/settings/employee`)
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`)
       }
@@ -143,7 +143,7 @@ export default function InternalAudit() {
   // ดึงข้อมูลแผนก
   const fetchDepartments = async () => {
     try {
-      const response = await fetch(`http://192.168.0.119:3000/api/settings/department`)
+      const response = await fetch(`https://ismsp-backend.onrender.com/api/settings/department`)
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`)
       }
@@ -168,7 +168,7 @@ export default function InternalAudit() {
   const fetchAudits = async () => {
     setLoading(true)
     try {
-      const response = await fetch('http://192.168.0.119:3000/api/9PE/internal-audit/')
+      const response = await fetch('https://ismsp-backend.onrender.com/api/9PE/internal-audit/')
 
       if (!response.ok) {
         throw new Error(`API responded with status: ${response.status}`)
@@ -232,7 +232,7 @@ export default function InternalAudit() {
   // Fetch all checklists
   const fetchChecklists = async () => {
     try {
-      const response = await fetch('http://192.168.0.119:3000/api/9PE/audit-checklist/')
+      const response = await fetch('https://ismsp-backend.onrender.com/api/9PE/audit-checklist/')
 
       if (!response.ok) {
         throw new Error(`API responded with status: ${response.status}`)
@@ -417,7 +417,7 @@ export default function InternalAudit() {
     }
 
     try {
-      const response = await fetch(`http://192.168.0.119:3000/api/9PE/internal-audit/${auditToDelete._id}`, {
+      const response = await fetch(`https://ismsp-backend.onrender.com/api/9PE/internal-audit/${auditToDelete._id}`, {
         method: 'DELETE'
       })
 
@@ -486,10 +486,10 @@ export default function InternalAudit() {
       // Set URL and method based on whether we're creating or updating
       let url, method
       if (isEditing) {
-        url = `http://192.168.0.119:3000/api/9PE/internal-audit/${activeForm._id}`
+        url = `https://ismsp-backend.onrender.com/api/9PE/internal-audit/${activeForm._id}`
         method = 'PUT'
       } else {
-        url = 'http://192.168.0.119:3000/api/9PE/internal-audit/create'
+        url = 'https://ismsp-backend.onrender.com/api/9PE/internal-audit/create'
         method = 'POST'
       }
 
@@ -1271,7 +1271,7 @@ export default function InternalAudit() {
                           {currentAudit.auditReportFileName ? (
                             <Button
                               variant='text'
-                              href={`http://192.168.0.119:3000${currentAudit.auditReportFileName}`}
+                              href={`https://ismsp-backend.onrender.com${currentAudit.auditReportFileName}`}
                               target='_blank'
                               startIcon={<AssignmentIcon />}
                               size='small'
@@ -1294,7 +1294,7 @@ export default function InternalAudit() {
                           {currentAudit.findingsFileName ? (
                             <Button
                               variant='text'
-                              href={`http://192.168.0.119:3000${currentAudit.findingsFileName}`}
+                              href={`https://ismsp-backend.onrender.com${currentAudit.findingsFileName}`}
                               target='_blank'
                               startIcon={<FindInPageIcon />}
                               size='small'
@@ -1317,7 +1317,7 @@ export default function InternalAudit() {
                           {currentAudit.correctiveActionEvidenceFileName ? (
                             <Button
                               variant='text'
-                              href={`http://192.168.0.119:3000${currentAudit.correctiveActionEvidenceFileName}`}
+                              href={`https://ismsp-backend.onrender.com${currentAudit.correctiveActionEvidenceFileName}`}
                               target='_blank'
                               startIcon={<AssignmentIcon />}
                               size='small'
@@ -1340,7 +1340,7 @@ export default function InternalAudit() {
                           {currentAudit.followUpReportFileName ? (
                             <Button
                               variant='text'
-                              href={`http://192.168.0.119:3000${currentAudit.followUpReportFileName}`}
+                              href={`https://ismsp-backend.onrender.com${currentAudit.followUpReportFileName}`}
                               target='_blank'
                               startIcon={<AssignmentIcon />}
                               size='small'

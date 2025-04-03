@@ -26,7 +26,7 @@ export default function ScopeStatementManagement() {
   const [isEditing, setIsEditing] = useState(false)
   const [selectedId, setSelectedId] = useState(null)
 
-  const API_BASE_URL = 'http://192.168.0.119:3000/api/4COTO/scope-statement'
+  const API_BASE_URL = 'https://ismsp-backend.onrender.com/api/4COTO/scope-statement'
 
   useEffect(() => {
     fetchScopeStatements()
@@ -48,7 +48,7 @@ export default function ScopeStatementManagement() {
   // 🔹 ดึงตัวเลือก SOA
   const fetchSOAOptions = async () => {
     try {
-      const response = await fetch('http://192.168.0.119:3000/api/settings/soa')
+      const response = await fetch('https://ismsp-backend.onrender.com/api/settings/soa')
       const result = await response.json()
 
       console.log('Updated SOA Options:', result.data)

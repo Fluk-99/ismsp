@@ -36,7 +36,7 @@ import DescriptionIcon from '@mui/icons-material/Description'
 import FilterListIcon from '@mui/icons-material/FilterList'
 import RestartAltIcon from '@mui/icons-material/RestartAlt'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://192.168.0.119:3000/api'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://ismsp-backend.onrender.com/api'
 
 const ResourcesForm = () => {
   // State for resources

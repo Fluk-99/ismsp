@@ -17,8 +17,8 @@ const actions = [
   { icon: '✏️', name: 'Edit', path: 'OrganizationChart_C' }
 ]
 
-const API_URL = 'http://192.168.0.119:3000/api/settings/organization-chart'
-const DEPARTMENTS_API_URL = 'http://192.168.0.119:3000/api/settings/department' // เพิ่ม API URL สำหรับดึงข้อมูลแผนก
+const API_URL = 'https://ismsp-backend.onrender.com/api/settings/organization-chart'
+const DEPARTMENTS_API_URL = 'https://ismsp-backend.onrender.com/api/settings/department' // เพิ่ม API URL สำหรับดึงข้อมูลแผนก
 
 const OrganizationChart_V = () => {
   const [organizationCharts, setOrganizationCharts] = useState([])
