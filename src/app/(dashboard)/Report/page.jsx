@@ -82,7 +82,7 @@ export default function ReportGeneratorMUI() {
   // โหลดรายการ clauses ที่มีในระบบ
   const fetchAvailableClauses = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}api/sub-clause-report/available-sub-clauses`)
+      const response = await fetch(`${API_BASE_URL}/api/sub-clause-report/available-sub-clauses`)
       if (!response.ok) {
         throw new Error('Failed to fetch available clauses')
       }
@@ -130,18 +130,41 @@ export default function ReportGeneratorMUI() {
         reqData.subClauseNumber = subClause || mainClause
       }
 
+      console.log('Sending request to:', endpoint, 'with data:', reqData)
+
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(reqData)
       })
 
+      console.log('Response status:', response.status)
+
       if (!response.ok) {
-        throw new Error('Failed to generate report')
+        throw new Error(`Failed to generate report: ${response.status}`)
       }
 
       const data = await response.json()
-      setSuccess(`รายงานถูกสร้างเรียบร้อยแล้ว: ${data.filePath.split('/').pop()}`)
+      console.log('Response data:', data)
+
+      // แก้ไขส่วนนี้โดยเพิ่มการตรวจสอบ data.filePath
+      let filename = 'report.pdf'
+      if (data.filePath && typeof data.filePath === 'string') {
+        filename = data.filePath.split('/').pop()
+      } else if (data.message) {
+        // ใช้ message หากไม่มี filePath
+        console.log('No filePath in response, using message instead')
+        setSuccess(data.message)
+        setSnackMessage('สร้างรายงานสำเร็จแล้ว')
+        setSnackSeverity('success')
+        setSnackOpen(true)
+
+        fetchGeneratedReports() // โหลดรายการรายงานใหม่
+        setTimeout(() => setTabValue(1), 1500)
+        return
+      }
+
+      setSuccess(`รายงานถูกสร้างเรียบร้อยแล้ว: ${filename}`)
 
       // แสดง snackbar
       setSnackMessage('สร้างรายงานสำเร็จแล้ว')
