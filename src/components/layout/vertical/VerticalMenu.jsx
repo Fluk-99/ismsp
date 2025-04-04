@@ -163,6 +163,8 @@ const VerticalMenu = ({ scrollMenu }) => {
             Continual Improvement
           </MenuItem>
         </SubMenu>
+
+        <MenuItem href='/Report'>Report Generate</MenuItem>
       </Menu>
       {/* <Menu
           popoutMenuOffset={{ mainAxis: 23 }}
