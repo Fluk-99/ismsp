@@ -27,6 +27,8 @@ import {
   ListItemSecondaryAction,
   Snackbar
 } from '@mui/material'
+import DownloadIcon from '@mui/icons-material/Download'
+import DeleteIcon from '@mui/icons-material/Delete'
 
 const API_BASE_URL = 'https://ismsp-backend.onrender.com'
 
@@ -160,24 +162,22 @@ export default function ReportGeneratorMUI() {
       const data = await response.json()
       console.log('Response data:', data)
 
-      // แก้ไขส่วนนี้โดยเพิ่มการตรวจสอบ data.filePath
-      let filename = 'report.pdf'
-      if (data.filePath && typeof data.filePath === 'string') {
-        filename = data.filePath.split('/').pop()
-      } else if (data.message) {
-        // ใช้ message หากไม่มี filePath
-        console.log('No filePath in response, using message instead')
-        setSuccess(data.message)
-        setSnackMessage('สร้างรายงานสำเร็จแล้ว')
-        setSnackSeverity('success')
-        setSnackOpen(true)
+      // ตรวจสอบว่าเป็นรายงานแบบเต็มหรือไม่
+      if (reportType === 'full' && data.allFilePaths && Array.isArray(data.allFilePaths)) {
+        // กรณีเป็นรายงานแบบเต็ม และมี allFilePaths
+        setSuccess(`รายงานทุกหมวดถูกสร้างเรียบร้อยแล้ว จำนวน ${data.allFilePaths.length} ไฟล์`)
 
-        fetchGeneratedReports() // โหลดรายการรายงานใหม่
-        setTimeout(() => setTabValue(1), 1500)
-        return
+        // หรือถ้าต้องการแสดงชื่อไฟล์ทั้งหมด
+        // const fileNames = data.allFilePaths.map(path => path.split('/').pop()).join(', ');
+        // setSuccess(`รายงานทุกหมวดถูกสร้างเรียบร้อยแล้ว: ${fileNames}`);
+      } else {
+        // กรณีไม่ใช่รายงานแบบเต็ม หรือไม่มี allFilePaths
+        let filename = 'report.pdf'
+        if (data.filePath && typeof data.filePath === 'string') {
+          filename = data.filePath.split('/').pop()
+        }
+        setSuccess(`รายงานถูกสร้างเรียบร้อยแล้ว: ${filename}`)
       }
-
-      setSuccess(`รายงานถูกสร้างเรียบร้อยแล้ว: ${filename}`)
 
       // แสดง snackbar
       setSnackMessage('สร้างรายงานสำเร็จแล้ว')
