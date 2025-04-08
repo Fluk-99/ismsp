@@ -98,15 +98,28 @@ export default function ReportGeneratorMUI() {
   // โหลดรายงานที่สร้างไว้แล้ว
   const fetchGeneratedReports = async () => {
     try {
+      setIsLoading(true) // เพิ่มตัวแสดงการโหลด
+      console.log(`Fetching reports from: ${API_BASE_URL}/api/report/list`)
+
       const response = await fetch(`${API_BASE_URL}/api/report/list`)
+      console.log('Response status:', response.status)
+
       if (!response.ok) {
-        throw new Error('Failed to fetch generated reports')
+        const errorText = await response.text()
+        console.error('Error response:', errorText)
+        throw new Error(`Failed to fetch generated reports: ${response.status}, ${errorText}`)
       }
+
       const data = await response.json()
+      console.log('Reports data:', data)
       setGeneratedReports(data.reports || [])
     } catch (error) {
       console.error('Error fetching generated reports:', error)
-      // ไม่ต้องแสดง error นี้ เพราะไม่ใช่ error หลัก
+      setSnackMessage('เกิดข้อผิดพลาดในการโหลดรายการรายงาน: ' + error.message)
+      setSnackSeverity('error')
+      setSnackOpen(true)
+    } finally {
+      setIsLoading(false)
     }
   }
 
