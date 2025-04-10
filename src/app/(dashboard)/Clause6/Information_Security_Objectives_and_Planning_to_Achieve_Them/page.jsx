@@ -950,6 +950,7 @@ const RiskAssessmentPage = () => {
                       <TableHead>
                         <TableRow>
                           <TableCell>Level</TableCell>
+                          <TableCell>Name</TableCell>
                           <TableCell>Description</TableCell>
                         </TableRow>
                       </TableHead>
@@ -957,6 +958,7 @@ const RiskAssessmentPage = () => {
                         {detailDialog.assessment.likelihoodLevels.map((level, index) => (
                           <TableRow key={index}>
                             <TableCell>{level.level}</TableCell>
+                            <TableCell>{level.name}</TableCell>
                             <TableCell>{level.description}</TableCell>
                           </TableRow>
                         ))}
@@ -981,6 +983,7 @@ const RiskAssessmentPage = () => {
                       <TableHead>
                         <TableRow>
                           <TableCell>Level</TableCell>
+                          <TableCell>Name</TableCell>
                           <TableCell>Description</TableCell>
                         </TableRow>
                       </TableHead>
@@ -988,6 +991,7 @@ const RiskAssessmentPage = () => {
                         {detailDialog.assessment.impactLevels.map((level, index) => (
                           <TableRow key={index}>
                             <TableCell>{level.level}</TableCell>
+                            <TableCell>{level.name}</TableCell>
                             <TableCell>{level.description}</TableCell>
                           </TableRow>
                         ))}

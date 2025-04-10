@@ -48,7 +48,13 @@ const Process_V = () => {
           subDepartment:
             process.subDepartment && typeof process.subDepartment === 'object'
               ? process.subDepartment.name || 'N/A'
-              : 'N/A'
+              : 'N/A',
+          soas:
+            process.soas?.map(soa => ({
+              controlId: soa.controlId,
+              controlName: soa.controlName,
+              implementationStatus: soa.implementationStatus
+            })) || []
         }))
 
         setProcesses(formattedData)
@@ -83,6 +89,7 @@ const Process_V = () => {
                 <TableCell>Details</TableCell> {/* ✅ เพิ่ม Details */}
                 <TableCell>Department</TableCell>
                 <TableCell>Sub-Department</TableCell>
+                <TableCell>SOA Controls</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -99,6 +106,50 @@ const Process_V = () => {
                     </TableCell>
                     <TableCell>{process.department}</TableCell>
                     <TableCell>{process.subDepartment || 'N/A'}</TableCell>
+                    <TableCell>
+                      {process.soas && process.soas.length > 0 ? (
+                        <Box sx={{ maxHeight: '150px', overflowY: 'auto' }}>
+                          {process.soas.map((soa, idx) => (
+                            <Box
+                              key={idx}
+                              sx={{
+                                mb: 1,
+                                p: 1,
+                                borderRadius: 1
+                                /*bgcolor:
+                                  soa.implementationStatus === 'Partially Implemented'
+                                    ? '#fff3e0'
+                                    : soa.implementationStatus === 'Fully Implemented'
+                                      ? '#e8f5e9'
+                                      : '#ffebee'*/
+                              }}
+                            >
+                              <Typography variant='body2' sx={{ fontWeight: 'bold' }}>
+                                {soa.controlId}
+                              </Typography>
+                              <Typography variant='body2'>{soa.controlName}</Typography>
+                              {/*
+                              <Typography
+                                variant='caption'
+                                sx={{
+                                  color:
+                                    soa.implementationStatus === 'Partially Implemented'
+                                      ? '#f57c00'
+                                      : soa.implementationStatus === 'Fully Implemented'
+                                        ? '#2e7d32'
+                                        : '#c62828'
+                                }}
+                              >
+                                {soa.implementationStatus}
+                              </Typography>
+                              */}
+                            </Box>
+                          ))}
+                        </Box>
+                      ) : (
+                        'No SOA Controls'
+                      )}
+                    </TableCell>
                   </TableRow>
                 ))
               ) : (

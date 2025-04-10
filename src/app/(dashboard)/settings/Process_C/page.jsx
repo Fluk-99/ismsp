@@ -7,16 +7,19 @@ import 'react-toastify/dist/ReactToastify.css'
 
 const API_URL = 'https://ismsp-backend.onrender.com/api/settings/process'
 const DEPARTMENT_API_URL = 'https://ismsp-backend.onrender.com/api/settings/department'
+const SOA_API_URL = 'https://ismsp-backend.onrender.com/api/settings/soa'
 
 const Process_C = () => {
   const [processes, setProcesses] = useState([])
   const [departments, setDepartments] = useState([])
   const [loading, setLoading] = useState(true)
   const [canAdd, setCanAdd] = useState(true)
+  const [soas, setSoas] = useState([])
 
   useEffect(() => {
     fetchProcesses()
     fetchDepartments()
+    fetchSOAs()
   }, [])
 
   const fetchProcesses = async () => {
@@ -34,6 +37,7 @@ const Process_C = () => {
           details: proc.details || '',
           department: proc.department?._id || '',
           subDepartment: proc.subDepartment?._id || '',
+          soas: proc.soas?.map(soa => soa._id) || [],
           isEditable: false
         }))
       )
@@ -58,6 +62,18 @@ const Process_C = () => {
     }
   }
 
+  const fetchSOAs = async () => {
+    try {
+      const response = await fetch(SOA_API_URL)
+      if (!response.ok) throw new Error('Failed to fetch SOAs')
+      const data = await response.json()
+      setSoas(data.data)
+    } catch (error) {
+      console.error('Error fetching SOAs:', error)
+      toast.error('Failed to fetch SOAs.')
+    }
+  }
+
   const handleEditToggle = id => {
     setProcesses(prev =>
       prev.map(process =>
@@ -71,7 +87,7 @@ const Process_C = () => {
     const process = processes.find(process => process.id === id)
 
     if (!process || !process.name.trim() || !process.department.trim()) {
-      toast.error('Please fill in all fields before saving!', { position: 'top-right', autoClose: 3000 })
+      toast.error('Please fill in all required fields!')
       return
     }
 
@@ -91,17 +107,17 @@ const Process_C = () => {
           name: process.name,
           details: process.details,
           departmentId: process.department,
-          subDepartmentId: process.subDepartment
+          subDepartmentId: process.subDepartment,
+          soaIds: process.soas
         })
       })
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`)
-      }
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`)
+
       const updatedProcess = await response.json()
       console.log('Updated Process:', updatedProcess)
 
-      toast.success('Process saved successfully!', { position: 'top-right', autoClose: 3000 })
+      toast.success('Process saved successfully!')
       fetchProcesses()
       setCanAdd(true)
     } catch (error) {
@@ -119,6 +135,7 @@ const Process_C = () => {
         details: '',
         department: '',
         subDepartment: '',
+        soas: [],
         isEditable: true,
         isSaved: false
       }
@@ -209,6 +226,34 @@ const Process_C = () => {
                     {sub.name}
                   </MenuItem>
                 )) || <MenuItem value=''>No Sub-Department</MenuItem>}
+            </Select>
+
+            <Select
+              multiple
+              fullWidth
+              disabled={!process.isEditable}
+              value={process.soas || []}
+              onChange={e =>
+                setProcesses(prev => prev.map(d => (d.id === process.id ? { ...d, soas: e.target.value } : d)))
+              }
+              renderValue={selected => (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                  {selected.map(value => {
+                    const soa = soas.find(s => s._id === value)
+                    return (
+                      <Typography key={value} component='span'>
+                        {soa?.controlId} {soa?.controlName},
+                      </Typography>
+                    )
+                  })}
+                </Box>
+              )}
+            >
+              {soas.map(soa => (
+                <MenuItem key={soa._id} value={soa._id}>
+                  {soa.controlId} - {soa.controlName}
+                </MenuItem>
+              ))}
             </Select>
 
             <Button variant='contained' color='secondary' onClick={() => handleEditToggle(process.id)}>
