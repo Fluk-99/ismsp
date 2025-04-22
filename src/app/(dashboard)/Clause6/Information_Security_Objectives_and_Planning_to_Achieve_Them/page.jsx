@@ -63,13 +63,30 @@ const RiskAssessmentPage = () => {
     calculationMethod: 'addition',
     likelihoodLevels: [],
     impactLevels: [],
-    acceptableRiskThreshold: 0,
-    riskTreatmentPlans: []
+    impactThresholds: [],
+    riskThresholds: [],
+    riskTreatmentPlans: [],
+    acceptableRiskThreshold: 4 // เพิ่มค่าเริ่มต้นเป็น 4 ตามเกณฑ์
   })
 
   // New level inputs
   const [newLikelihoodLevel, setNewLikelihoodLevel] = useState({ level: '', name: '', description: '' })
   const [newImpactLevel, setNewImpactLevel] = useState({ level: '', name: '', description: '' })
+
+  // New threshold inputs
+  const [newImpactThreshold, setNewImpactThreshold] = useState({
+    level: '',
+    name: '',
+    min: '',
+    max: ''
+  })
+
+  const [newRiskThreshold, setNewRiskThreshold] = useState({
+    level: '',
+    name: '',
+    min: '',
+    max: ''
+  })
 
   // New treatment plan
   const [newTreatmentPlan, setNewTreatmentPlan] = useState({
@@ -243,8 +260,10 @@ const RiskAssessmentPage = () => {
       calculationMethod: 'addition',
       likelihoodLevels: [],
       impactLevels: [],
-      acceptableRiskThreshold: 0,
-      riskTreatmentPlans: []
+      impactThresholds: [],
+      riskThresholds: [],
+      riskTreatmentPlans: [],
+      acceptableRiskThreshold: 4 // เพิ่มค่าเริ่มต้นเป็น 4 ตามเกณฑ์
     })
     setIsEditMode(false)
     setViewMode(false)
@@ -265,7 +284,7 @@ const RiskAssessmentPage = () => {
     const { name, value } = e.target
     setFormData({
       ...formData,
-      [name]: name === 'acceptableRiskThreshold' ? Number(value) : value
+      [name]: value
     })
   }
 
@@ -310,6 +329,68 @@ const RiskAssessmentPage = () => {
     setFormData({
       ...formData,
       [category]: formData[category].filter((_, i) => i !== index)
+    })
+  }
+
+  // Add impact threshold
+  const addImpactThreshold = () => {
+    if (newImpactThreshold.level && newImpactThreshold.min && newImpactThreshold.max) {
+      // ตรวจสอบว่า level อ้างอิงถึง impact level ที่มีอยู่
+      const impactLevel = formData.impactLevels.find(il => il.level === Number(newImpactThreshold.level))
+
+      if (!impactLevel) {
+        showNotification('Impact threshold must reference existing impact level', 'error')
+        return
+      }
+
+      setFormData({
+        ...formData,
+        impactThresholds: [
+          ...formData.impactThresholds,
+          {
+            level: Number(newImpactThreshold.level),
+            name: impactLevel.name,
+            min: Number(newImpactThreshold.min),
+            max: Number(newImpactThreshold.max)
+          }
+        ]
+      })
+      setNewImpactThreshold({ level: '', name: '', min: '', max: '' })
+    }
+  }
+
+  // Remove impact threshold
+  const removeImpactThreshold = index => {
+    setFormData({
+      ...formData,
+      impactThresholds: formData.impactThresholds.filter((_, i) => i !== index)
+    })
+  }
+
+  // Add risk threshold
+  const addRiskThreshold = () => {
+    if (newRiskThreshold.level && newRiskThreshold.name && newRiskThreshold.min && newRiskThreshold.max) {
+      setFormData({
+        ...formData,
+        riskThresholds: [
+          ...formData.riskThresholds,
+          {
+            level: Number(newRiskThreshold.level),
+            name: newRiskThreshold.name,
+            min: Number(newRiskThreshold.min),
+            max: Number(newRiskThreshold.max)
+          }
+        ]
+      })
+      setNewRiskThreshold({ level: '', name: '', min: '', max: '' })
+    }
+  }
+
+  // Remove risk threshold
+  const removeRiskThreshold = index => {
+    setFormData({
+      ...formData,
+      riskThresholds: formData.riskThresholds.filter((_, i) => i !== index)
     })
   }
 
@@ -448,7 +529,8 @@ const RiskAssessmentPage = () => {
                       <TableCell>Calculation Method</TableCell>
                       <TableCell>Likelihood Levels</TableCell>
                       <TableCell>Impact Levels</TableCell>
-                      <TableCell>Acceptable Risk Threshold</TableCell>
+                      <TableCell>Impact Thresholds</TableCell>
+                      <TableCell>Risk Thresholds</TableCell>
                       <TableCell>Treatment Plans</TableCell>
                       <TableCell>Actions</TableCell>
                     </TableRow>
@@ -459,7 +541,8 @@ const RiskAssessmentPage = () => {
                         <TableCell>{assessment.calculationMethod}</TableCell>
                         <TableCell>{getLevelCount(assessment, 'likelihoodLevels')} levels</TableCell>
                         <TableCell>{getLevelCount(assessment, 'impactLevels')} levels</TableCell>
-                        <TableCell>{assessment.acceptableRiskThreshold}</TableCell>
+                        <TableCell>{assessment.impactThresholds?.length} thresholds</TableCell>
+                        <TableCell>{assessment.riskThresholds?.length} thresholds</TableCell>
                         <TableCell>{getTreatmentPlanCount(assessment)} plans</TableCell>
                         <TableCell>
                           <Tooltip title='View Details'>
@@ -510,19 +593,19 @@ const RiskAssessmentPage = () => {
                     </Select>
                   </FormControl>
                 </Grid>
-
                 <Grid item xs={12} sm={6}>
                   <TextField
-                    fullWidth
                     label='Acceptable Risk Threshold'
                     name='acceptableRiskThreshold'
                     type='number'
                     value={formData.acceptableRiskThreshold}
                     onChange={handleInputChange}
                     disabled={viewMode}
+                    fullWidth
+                    required
+                    inputProps={{ min: 1 }}
                   />
                 </Grid>
-
                 {/* Likelihood Levels Section */}
                 <Grid item xs={12}>
                   <Accordion defaultExpanded>
@@ -704,6 +787,226 @@ const RiskAssessmentPage = () => {
                               <TableRow>
                                 <TableCell colSpan={viewMode ? 2 : 3} align='center'>
                                   No levels added
+                                </TableCell>
+                              </TableRow>
+                            )}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </AccordionDetails>
+                  </Accordion>
+                </Grid>
+                {/* Impact Thresholds Section */}
+                <Grid item xs={12}>
+                  <Accordion defaultExpanded>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                      <Typography variant='h6'>Impact Thresholds</Typography>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      {!viewMode && (
+                        <Box sx={{ mb: 2 }}>
+                          <Grid container spacing={2}>
+                            <Grid item xs={2}>
+                              <TextField
+                                label='Level'
+                                type='number'
+                                value={newImpactThreshold.level}
+                                onChange={e =>
+                                  setNewImpactThreshold({
+                                    ...newImpactThreshold,
+                                    level: e.target.value
+                                  })
+                                }
+                                fullWidth
+                              />
+                            </Grid>
+                            <Grid item xs={3}>
+                              <TextField
+                                label='Min'
+                                type='number'
+                                value={newImpactThreshold.min}
+                                onChange={e =>
+                                  setNewImpactThreshold({
+                                    ...newImpactThreshold,
+                                    min: e.target.value
+                                  })
+                                }
+                                fullWidth
+                              />
+                            </Grid>
+                            <Grid item xs={3}>
+                              <TextField
+                                label='Max'
+                                type='number'
+                                value={newImpactThreshold.max}
+                                onChange={e =>
+                                  setNewImpactThreshold({
+                                    ...newImpactThreshold,
+                                    max: e.target.value
+                                  })
+                                }
+                                fullWidth
+                              />
+                            </Grid>
+                            <Grid item xs={2}>
+                              <Button
+                                variant='contained'
+                                onClick={addImpactThreshold}
+                                fullWidth
+                                sx={{ height: '100%' }}
+                              >
+                                Add
+                              </Button>
+                            </Grid>
+                          </Grid>
+                        </Box>
+                      )}
+                      {/* Table แสดง Impact Thresholds */}
+                      <TableContainer component={Paper} variant='outlined' sx={{ mb: 3 }}>
+                        <Table size='small'>
+                          <TableHead>
+                            <TableRow>
+                              <TableCell>Level</TableCell>
+                              <TableCell>Name</TableCell>
+                              <TableCell>Min</TableCell>
+                              <TableCell>Max</TableCell>
+                              {!viewMode && <TableCell align='center'>Action</TableCell>}
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {formData.impactThresholds.map((threshold, index) => (
+                              <TableRow key={index}>
+                                <TableCell>{threshold.level}</TableCell>
+                                <TableCell>{threshold.name}</TableCell>
+                                <TableCell>{threshold.min}</TableCell>
+                                <TableCell>{threshold.max}</TableCell>
+                                {!viewMode && (
+                                  <TableCell align='center'>
+                                    <IconButton size='small' color='error' onClick={() => removeImpactThreshold(index)}>
+                                      <DeleteIcon fontSize='small' />
+                                    </IconButton>
+                                  </TableCell>
+                                )}
+                              </TableRow>
+                            ))}
+                            {formData.impactThresholds.length === 0 && (
+                              <TableRow>
+                                <TableCell colSpan={viewMode ? 4 : 5} align='center'>
+                                  No thresholds added
+                                </TableCell>
+                              </TableRow>
+                            )}
+                          </TableBody>
+                        </Table>
+                      </TableContainer>
+                    </AccordionDetails>
+                  </Accordion>
+                </Grid>
+                {/* Risk Thresholds Section*/}
+                <Grid item xs={12}>
+                  <Accordion defaultExpanded>
+                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                      <Typography variant='h6'>Risk Thresholds</Typography>
+                    </AccordionSummary>
+                    <AccordionDetails>
+                      {!viewMode && (
+                        <Box sx={{ mb: 2 }}>
+                          <Grid container spacing={2}>
+                            <Grid item xs={2}>
+                              <TextField
+                                label='Level'
+                                type='number'
+                                value={newRiskThreshold.level}
+                                onChange={e =>
+                                  setNewRiskThreshold({
+                                    ...newRiskThreshold,
+                                    level: e.target.value
+                                  })
+                                }
+                                fullWidth
+                              />
+                            </Grid>
+                            <Grid item xs={4}>
+                              <TextField
+                                label='Name'
+                                value={newRiskThreshold.name}
+                                onChange={e =>
+                                  setNewRiskThreshold({
+                                    ...newRiskThreshold,
+                                    name: e.target.value
+                                  })
+                                }
+                                fullWidth
+                              />
+                            </Grid>
+                            <Grid item xs={3}>
+                              <TextField
+                                label='Min'
+                                type='number'
+                                value={newRiskThreshold.min}
+                                onChange={e =>
+                                  setNewRiskThreshold({
+                                    ...newRiskThreshold,
+                                    min: e.target.value
+                                  })
+                                }
+                                fullWidth
+                              />
+                            </Grid>
+                            <Grid item xs={3}>
+                              <TextField
+                                label='Max'
+                                type='number'
+                                value={newRiskThreshold.max}
+                                onChange={e =>
+                                  setNewRiskThreshold({
+                                    ...newRiskThreshold,
+                                    max: e.target.value
+                                  })
+                                }
+                                fullWidth
+                              />
+                            </Grid>
+                            <Grid item xs={2}>
+                              <Button variant='contained' onClick={addRiskThreshold} fullWidth sx={{ height: '100%' }}>
+                                Add
+                              </Button>
+                            </Grid>
+                          </Grid>
+                        </Box>
+                      )}
+                      {/* Table แสดง Risk Thresholds */}
+                      <TableContainer component={Paper} variant='outlined' sx={{ mb: 3 }}>
+                        <Table size='small'>
+                          <TableHead>
+                            <TableRow>
+                              <TableCell>Level</TableCell>
+                              <TableCell>Name</TableCell>
+                              <TableCell>Min</TableCell>
+                              <TableCell>Max</TableCell>
+                              {!viewMode && <TableCell align='center'>Action</TableCell>}
+                            </TableRow>
+                          </TableHead>
+                          <TableBody>
+                            {(formData.riskThresholds || []).map((threshold, index) => (
+                              <TableRow key={index}>
+                                <TableCell>{threshold.level}</TableCell>
+                                <TableCell>{threshold.name}</TableCell>
+                                <TableCell>{threshold.min}</TableCell>
+                                <TableCell>{threshold.max}</TableCell>
+                                {!viewMode && (
+                                  <TableCell align='center'>
+                                    <IconButton size='small' color='error' onClick={() => removeRiskThreshold(index)}>
+                                      <DeleteIcon fontSize='small' />
+                                    </IconButton>
+                                  </TableCell>
+                                )}
+                              </TableRow>
+                            ))}
+                            {formData.riskThresholds?.length === 0 && (
+                              <TableRow>
+                                <TableCell colSpan={viewMode ? 4 : 5} align='center'>
+                                  No thresholds added
                                 </TableCell>
                               </TableRow>
                             )}
@@ -933,8 +1236,9 @@ const RiskAssessmentPage = () => {
                     {detailDialog.assessment.calculationMethod}
                   </Typography>
                 </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Typography variant='subtitle1'>Acceptable Risk Threshold:</Typography>
+
+                <Grid item xs={12}>
+                  <Typography variant='subtitle1'>acceptableRiskThreshold:</Typography>
                   <Typography variant='body1' gutterBottom>
                     {detailDialog.assessment.acceptableRiskThreshold}
                   </Typography>
@@ -1007,6 +1311,77 @@ const RiskAssessmentPage = () => {
                   </TableContainer>
                 </Grid>
 
+                <Grid item xs={12}>
+                  <Typography variant='h6' gutterBottom>
+                    Impact Thresholds
+                  </Typography>
+                  <TableContainer component={Paper} variant='outlined' sx={{ mb: 3 }}>
+                    <Table size='small'>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Level</TableCell>
+                          <TableCell>Name</TableCell>
+                          <TableCell>Min</TableCell>
+                          <TableCell>Max</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {detailDialog.assessment.impactThresholds.length > 0 ? (
+                          detailDialog.assessment.impactThresholds.map((threshold, index) => (
+                            <TableRow key={index}>
+                              <TableCell>{threshold.level}</TableCell>
+                              <TableCell>{threshold.name}</TableCell>
+                              <TableCell>{threshold.min}</TableCell>
+                              <TableCell>{threshold.max}</TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={4} align='center'>
+                              No impact thresholds defined
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <Typography variant='h6' gutterBottom>
+                    Risk Thresholds
+                  </Typography>
+                  <TableContainer component={Paper} variant='outlined' sx={{ mb: 3 }}>
+                    <Table size='small'>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Level</TableCell>
+                          <TableCell>Name</TableCell>
+                          <TableCell>Min</TableCell>
+                          <TableCell>Max</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {detailDialog.assessment.riskThresholds.length > 0 ? (
+                          detailDialog.assessment.riskThresholds.map((threshold, index) => (
+                            <TableRow key={index}>
+                              <TableCell>{threshold.level}</TableCell>
+                              <TableCell>{threshold.name}</TableCell>
+                              <TableCell>{threshold.min}</TableCell>
+                              <TableCell>{threshold.max}</TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={4} align='center'>
+                              No risk thresholds defined
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Grid>
                 <Grid item xs={12}>
                   <Typography variant='h6' gutterBottom>
                     Risk Treatment Plans

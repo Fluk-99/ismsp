@@ -33,6 +33,7 @@ import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
 import SaveIcon from '@mui/icons-material/Save'
 import CancelIcon from '@mui/icons-material/Cancel'
+import VisibilityIcon from '@mui/icons-material/Visibility'
 
 const RiskCriteriaPage = () => {
   // State for managing risk criteria
@@ -41,6 +42,7 @@ const RiskCriteriaPage = () => {
   const [error, setError] = useState(null)
 
   // Form states
+  const [viewDialog, setViewDialog] = useState({ open: false, criteria: null })
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isEditMode, setIsEditMode] = useState(false)
   const [currentCriteriaId, setCurrentCriteriaId] = useState(null)
@@ -51,7 +53,7 @@ const RiskCriteriaPage = () => {
     confidentialityLevels: [],
     integrityLevels: [],
     availabilityLevels: [],
-    criticalAssetThreshold: 0
+    criticalAssetThreshold: 3 // เพิ่ม default value
   })
 
   // New level inputs
@@ -201,7 +203,7 @@ const RiskCriteriaPage = () => {
       confidentialityLevels: [],
       integrityLevels: [],
       availabilityLevels: [],
-      criticalAssetThreshold: 0
+      criticalAssetThreshold: 3
     })
     setIsEditMode(false)
     setCurrentCriteriaId(null)
@@ -220,7 +222,7 @@ const RiskCriteriaPage = () => {
     const { name, value } = e.target
     setFormData({
       ...formData,
-      [name]: name === 'criticalAssetThreshold' ? Number(value) : value
+      [name]: value
     })
   }
 
@@ -277,6 +279,20 @@ const RiskCriteriaPage = () => {
   // Handle form submission
   const handleSubmit = e => {
     e.preventDefault()
+    const checkDuplicateLevels = levels => {
+      const levelNumbers = levels.map(l => l.level)
+      return new Set(levelNumbers).size !== levelNumbers.length
+    }
+
+    if (
+      checkDuplicateLevels(formData.confidentialityLevels) ||
+      checkDuplicateLevels(formData.integrityLevels) ||
+      checkDuplicateLevels(formData.availabilityLevels)
+    ) {
+      showNotification('Duplicate levels are not allowed', 'error')
+      return
+    }
+
     if (isEditMode) {
       updateRiskCriteria()
     } else {
@@ -299,6 +315,14 @@ const RiskCriteriaPage = () => {
     if (deleteDialog.criteriaId) {
       deleteRiskCriteria(deleteDialog.criteriaId)
     }
+  }
+
+  const handleOpenView = criteria => {
+    setViewDialog({ open: true, criteria })
+  }
+
+  const handleCloseView = () => {
+    setViewDialog({ open: false, criteria: null })
   }
 
   // Fetch data on component mount
@@ -338,10 +362,10 @@ const RiskCriteriaPage = () => {
                   <TableHead>
                     <TableRow>
                       <TableCell>Calculation Method</TableCell>
+                      <TableCell>Critical Asset Threshold</TableCell>
                       <TableCell>Confidentiality Levels</TableCell>
                       <TableCell>Integrity Levels</TableCell>
                       <TableCell>Availability Levels</TableCell>
-                      <TableCell>Critical Asset Threshold</TableCell>
                       <TableCell>Actions</TableCell>
                     </TableRow>
                   </TableHead>
@@ -349,11 +373,14 @@ const RiskCriteriaPage = () => {
                     {riskCriteria.map(criteria => (
                       <TableRow key={criteria._id}>
                         <TableCell>{criteria.calculationMethod}</TableCell>
+                        <TableCell>{criteria.criticalAssetThreshold}</TableCell>
                         <TableCell>{criteria.confidentialityLevels.length} levels</TableCell>
                         <TableCell>{criteria.integrityLevels.length} levels</TableCell>
                         <TableCell>{criteria.availabilityLevels.length} levels</TableCell>
-                        <TableCell>{criteria.criticalAssetThreshold}</TableCell>
                         <TableCell>
+                          <IconButton color='primary' onClick={() => handleOpenView(criteria)}>
+                            <VisibilityIcon />
+                          </IconButton>
                           <IconButton color='primary' onClick={() => fetchCriteriaById(criteria._id)}>
                             <EditIcon />
                           </IconButton>
@@ -392,14 +419,17 @@ const RiskCriteriaPage = () => {
                   </FormControl>
                 </Grid>
 
+                {/* Critical Asset Threshold */}
                 <Grid item xs={12}>
                   <TextField
                     fullWidth
                     label='Critical Asset Threshold'
-                    name='criticalAssetThreshold'
                     type='number'
+                    name='criticalAssetThreshold'
                     value={formData.criticalAssetThreshold}
                     onChange={handleInputChange}
+                    inputProps={{ min: 0 }}
+                    helperText='Minimum CIA score required to classify as critical asset'
                   />
                 </Grid>
 
@@ -669,6 +699,111 @@ const RiskCriteriaPage = () => {
             <Button onClick={confirmDelete} color='error' variant='contained'>
               Delete
             </Button>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog open={viewDialog.open} onClose={handleCloseView} maxWidth='md' fullWidth>
+          <DialogTitle>Risk Criteria Details</DialogTitle>
+          <DialogContent>
+            {viewDialog.criteria && (
+              <Grid container spacing={3} sx={{ mt: 1 }}>
+                <Grid item xs={12} md={6}>
+                  <Typography variant='subtitle2' color='text.secondary'>
+                    Calculation Method
+                  </Typography>
+                  <Typography variant='body1'>{viewDialog.criteria.calculationMethod}</Typography>
+                </Grid>
+
+                <Grid item xs={12} md={6}>
+                  <Typography variant='subtitle2' color='text.secondary'>
+                    Critical Asset Threshold
+                  </Typography>
+                  <Typography variant='body1'>{viewDialog.criteria.criticalAssetThreshold}</Typography>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <Divider sx={{ my: 2 }} />
+                  <Typography variant='h6' gutterBottom>
+                    Confidentiality Levels
+                  </Typography>
+                  <TableContainer component={Paper} variant='outlined'>
+                    <Table size='small'>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Level</TableCell>
+                          <TableCell>Name</TableCell>
+                          <TableCell>Description</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {viewDialog.criteria.confidentialityLevels.map((level, index) => (
+                          <TableRow key={index}>
+                            <TableCell>{level.level}</TableCell>
+                            <TableCell>{level.name}</TableCell>
+                            <TableCell>{level.description}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <Typography variant='h6' gutterBottom>
+                    Integrity Levels
+                  </Typography>
+                  <TableContainer component={Paper} variant='outlined'>
+                    <Table size='small'>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Level</TableCell>
+                          <TableCell>Name</TableCell>
+                          <TableCell>Description</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {viewDialog.criteria.integrityLevels.map((level, index) => (
+                          <TableRow key={index}>
+                            <TableCell>{level.level}</TableCell>
+                            <TableCell>{level.name}</TableCell>
+                            <TableCell>{level.description}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Grid>
+
+                <Grid item xs={12}>
+                  <Typography variant='h6' gutterBottom>
+                    Availability Levels
+                  </Typography>
+                  <TableContainer component={Paper} variant='outlined'>
+                    <Table size='small'>
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>Level</TableCell>
+                          <TableCell>Name</TableCell>
+                          <TableCell>Description</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {viewDialog.criteria.availabilityLevels.map((level, index) => (
+                          <TableRow key={index}>
+                            <TableCell>{level.level}</TableCell>
+                            <TableCell>{level.name}</TableCell>
+                            <TableCell>{level.description}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Grid>
+              </Grid>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseView}>Close</Button>
           </DialogActions>
         </Dialog>
 

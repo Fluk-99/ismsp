@@ -267,6 +267,9 @@ const Communication = () => {
                     value={comm.date?.substring?.(0, 10)}
                     disabled={!comm.isEditing}
                     onChange={e => updateCommunication(comm.id, 'date', e.target.value)}
+                    InputLabelProps={{
+                      shrink: true
+                    }}
                   />
                 </Grid>
                 <Grid item xs={12} md={6}>

@@ -40,7 +40,8 @@ import {
   TableHead,
   TableRow,
   Tooltip,
-  Snackbar
+  Snackbar,
+  Autocomplete
 } from '@mui/material'
 import {
   Add as AddIcon,
@@ -57,10 +58,10 @@ import {
 } from '@mui/icons-material'
 import React, { Fragment } from 'react'
 
-// Define asset types
-// Define risk types (formerly asset types)
+// Define constants
 const riskTypes = [
   { value: 'Personnel', label: 'บุคลากร' },
+  { value: 'Budget', label: 'เงินทุน' },
   { value: 'Information System', label: 'ระบบสารสนเทศ' },
   { value: 'Hardware', label: 'ฮาร์ดแวร์' },
   { value: 'Data', label: 'ข้อมูล' },
@@ -70,7 +71,6 @@ const riskTypes = [
   { value: 'Other', label: 'อื่นๆ' }
 ]
 
-// Define treatment options
 const treatmentOptions = [
   { value: 'Accept', label: 'ยอมรับความเสี่ยง (Accept)' },
   { value: 'Reduce', label: 'ลดความเสี่ยง (Reduce)' },
@@ -79,13 +79,6 @@ const treatmentOptions = [
   { value: 'Other', label: 'อื่นๆ (Other)' }
 ]
 
-// Define calculation methods
-const calculationMethods = [
-  { value: 'addition', label: 'การบวก (C+I+A)' },
-  { value: 'multiplication', label: 'การคูณ (C×I×A÷10)' }
-]
-
-// Define treatment plan statuses
 const treatmentStatusOptions = [
   { value: 'Planned', label: 'วางแผนแล้ว' },
   { value: 'In Progress', label: 'กำลังดำเนินการ' },
@@ -93,14 +86,24 @@ const treatmentStatusOptions = [
   { value: 'Cancelled', label: 'ยกเลิก' }
 ]
 
-export default function RiskManagementPage() {
+const calculationMethods = [
+  { value: 'addition', label: 'การบวก (Impact + Likelihood)' },
+  { value: 'multiplication', label: 'การคูณ (Impact × Likelihood)' }
+]
+
+export default function RiskAssessmentAndTreatment() {
   // State for risk entries list and filtering
   const [riskEntries, setRiskEntries] = useState([])
   const [filteredEntries, setFilteredEntries] = useState([])
   const [searchTerm, setSearchTerm] = useState('')
   const [filterRiskType, setFilterRiskType] = useState('')
   const [tabValue, setTabValue] = useState(0)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState({
+    entries: false,
+    assets: false,
+    assessment: false,
+    submitting: false
+  })
   const [error, setError] = useState(null)
   const [assets, setAssets] = useState([])
 
@@ -121,15 +124,14 @@ export default function RiskManagementPage() {
     vulnerability: '',
     existingControls: '',
     newControl: '',
-    // CIA fields for regular risk types
-    confidentialityLevel: 3,
-    integrityLevel: 3,
-    availabilityLevel: 3,
-    // Direct impact field for special risk types
-    impactLevel: 3,
-    likelihoodLevel: 3,
+    // กำหนดค่าเริ่มต้นสำหรับระดับความเสี่ยง
+    confidentialityLevel: 1,
+    integrityLevel: 1,
+    availabilityLevel: 1,
+    impactLevel: 1,
+    likelihoodLevel: 1, // กำหนดค่าเริ่มต้นเป็น 1
     calculationMethod: 'addition',
-    acceptableRiskThreshold: 15
+    riskThreshold: null
   })
 
   // State for calculation preview
@@ -155,7 +157,7 @@ export default function RiskManagementPage() {
       confidentialityLevel: 1,
       integrityLevel: 1,
       availabilityLevel: 1,
-      likelihoodLevel: 1,
+      likelihoodLevel: 1, // กำหนดค่าเริ่มต้นเป็น 1
       calculatedImpact: 0,
       riskLevel: 0,
       isAcceptable: false
@@ -171,6 +173,18 @@ export default function RiskManagementPage() {
     severity: 'success'
   })
 
+  // เพิ่ม state สำหรับวิธีการคำนวณแยกกัน
+  const [ciaCalculationMethod, setCIACalculationMethod] = useState('multiplication')
+  const [riskCalculationMethod, setRiskCalculationMethod] = useState('multiplication')
+
+  // แยก state สำหรับ CIA calculation
+  const [assetCIAValues, setAssetCIAValues] = useState({
+    confidentialityLevel: 1,
+    integrityLevel: 1,
+    availabilityLevel: 1,
+    isCriticalAsset: false
+  })
+
   // Fetch risk entries and assets when component mounts
   useEffect(() => {
     fetchRiskEntries()
@@ -179,36 +193,76 @@ export default function RiskManagementPage() {
     fetchRiskAssessment()
   }, [])
 
+  // คำนวณความเสี่ยงเมื่อค่าใน form เปลี่ยน
+  useEffect(() => {
+    if (!riskFormData || !riskAssessment) return
+
+    const { impactLevel, likelihoodLevel } = riskFormData
+
+    // คำนวณ risk level ตามวิธีที่เลือก
+    const riskLevel =
+      riskCalculationMethod === 'multiplication' ? impactLevel * likelihoodLevel : impactLevel + likelihoodLevel
+
+    // เช็ค threshold
+    const exceedsThreshold = riskLevel > (riskAssessment.acceptableRiskThreshold || 0)
+
+    setCalculatedValues({
+      riskLevel,
+      exceedsThreshold
+    })
+  }, [
+    riskFormData.impactLevel,
+    riskFormData.likelihoodLevel,
+    riskCalculationMethod,
+    riskAssessment?.acceptableRiskThreshold
+  ])
+
+  useEffect(() => {
+    if (!treatmentFormData || !selectedRiskEntry) return
+
+    const { confidentialityLevel, integrityLevel, availabilityLevel, likelihoodLevel } = treatmentFormData.residualRisk
+    const calculationMethod = selectedRiskEntry.calculationMethod || 'addition'
+    const acceptableRiskThreshold = selectedRiskEntry.acceptableRiskThreshold || 5
+
+    // คำนวณผลกระทบด้วยวิธีเดียวกับความเสี่ยงต้นทาง
+    let calculatedImpact = 0
+
+    // สำหรับความเสี่ยงประเภทพิเศษ
+    const specialRiskTypes = ['Internal Factor', 'External Factor', 'Other']
+    const isSpecialRiskType = specialRiskTypes.includes(selectedRiskEntry.riskType)
+
+    if (isSpecialRiskType && treatmentFormData.residualRisk.impactLevel) {
+      calculatedImpact = treatmentFormData.residualRisk.impactLevel
+    } else {
+      if (calculationMethod === 'addition') {
+        calculatedImpact = (confidentialityLevel || 0) + (integrityLevel || 0) + (availabilityLevel || 0)
+      } else {
+        calculatedImpact = (confidentialityLevel || 1) * (integrityLevel || 1) * (availabilityLevel || 1)
+      }
+    }
+
+    // คำนวณระดับความเสี่ยง
+    const riskLevel = calculatedImpact * (likelihoodLevel || 1)
+
+    // ตรวจสอบว่าอยู่ในเกณฑ์ที่ยอมรับได้หรือไม่
+    const isAcceptable = riskLevel <= acceptableRiskThreshold
+
+    // อัปเดตข้อมูลฟอร์มด้วยค่าที่คำนวณได้
+    setTreatmentFormData(prev => ({
+      ...prev,
+      residualRisk: {
+        ...prev.residualRisk,
+        calculatedImpact,
+        riskLevel,
+        isAcceptable
+      }
+    }))
+  }, [treatmentFormData.residualRisk, selectedRiskEntry])
+
   // Filter risk entries when tab changes or search term changes
   useEffect(() => {
     filterRiskEntries()
   }, [riskEntries, tabValue, searchTerm, filterRiskType])
-
-  // Calculate impact and risk level when form data changes
-  // Calculate impact and risk level when form data changes
-  useEffect(() => {
-    calculateImpactAndRisk()
-  }, [
-    riskFormData.confidentialityLevel,
-    riskFormData.integrityLevel,
-    riskFormData.availabilityLevel,
-    riskFormData.impactLevel,
-    riskFormData.likelihoodLevel,
-    riskFormData.calculationMethod,
-    riskFormData.acceptableRiskThreshold,
-    riskFormData.riskType,
-    riskAssessment
-  ])
-
-  // Calculate residual risk when form data changes
-  useEffect(() => {
-    calculateResidualRisk()
-  }, [
-    treatmentFormData.residualRisk.confidentialityLevel,
-    treatmentFormData.residualRisk.integrityLevel,
-    treatmentFormData.residualRisk.availabilityLevel,
-    treatmentFormData.residualRisk.likelihoodLevel
-  ])
 
   // Fetch risk entries from API
   const fetchRiskEntries = async () => {
@@ -327,98 +381,6 @@ export default function RiskManagementPage() {
     setFilteredEntries(filtered)
   }
 
-  // Calculate impact score and risk level
-  const calculateImpactAndRisk = () => {
-    let impactScore
-
-    // Special risk types that use direct impact scoring
-    const specialRiskTypes = ['Internal Factor', 'External Factor', 'Other']
-    const isSpecialRiskType = specialRiskTypes.includes(riskFormData.riskType)
-
-    if (isSpecialRiskType) {
-      // For special risk types, use the direct impact level
-      impactScore = Number(riskFormData.impactLevel)
-    } else {
-      // For regular risk types, calculate based on CIA
-      if (riskFormData.calculationMethod === 'addition') {
-        impactScore =
-          Number(riskFormData.confidentialityLevel) +
-          Number(riskFormData.integrityLevel) +
-          Number(riskFormData.availabilityLevel)
-      } else {
-        // multiplication
-        impactScore =
-          (Number(riskFormData.confidentialityLevel) *
-            Number(riskFormData.integrityLevel) *
-            Number(riskFormData.availabilityLevel)) /
-          10
-      }
-    }
-
-    const riskLevel = impactScore * Number(riskFormData.likelihoodLevel)
-    const exceedsThreshold = riskLevel > Number(riskFormData.acceptableRiskThreshold)
-
-    // หากมีเกณฑ์ impact levels จาก riskAssessment ลองหาระดับความรุนแรง
-    let impactSeverity = ''
-    if (riskAssessment?.impactLevels) {
-      // เรียงจากมากไปน้อย
-      const sortedLevels = [...riskAssessment.impactLevels].sort((a, b) => b.level - a.level)
-      const matchedLevel = sortedLevels.find(level => impactScore >= level.level)
-      if (matchedLevel) {
-        impactSeverity = matchedLevel.name
-      }
-    }
-
-    setCalculatedValues({
-      impactScore,
-      riskLevel,
-      exceedsThreshold,
-      impactSeverity
-    })
-  }
-
-  // Calculate residual risk
-  const calculateResidualRisk = () => {
-    if (!selectedRiskEntry) return
-
-    const { confidentialityLevel, integrityLevel, availabilityLevel, likelihoodLevel } = treatmentFormData.residualRisk
-    let calculatedImpact
-
-    // เพิ่มการตรวจสอบว่าเป็น Special Risk Types หรือไม่
-    const specialRiskTypes = ['Internal Factor', 'External Factor', 'Other']
-    const isSpecialRiskType = specialRiskTypes.includes(selectedRiskEntry.riskType)
-
-    if (isSpecialRiskType) {
-      // สำหรับ Special Risk Types ใช้ค่า impactLevel โดยตรง
-      // ถ้าไม่มี field ชื่อ residualImpactLevel โดยตรง ให้ใช้ค่าเฉลี่ยของ CIA แทน
-      calculatedImpact = Math.round(
-        (Number(confidentialityLevel) + Number(integrityLevel) + Number(availabilityLevel)) / 3
-      )
-    } else {
-      // สำหรับประเภทความเสี่ยงปกติ คำนวณจาก CIA ตามวิธีการคำนวณที่กำหนด
-      if (selectedRiskEntry.calculationMethod === 'addition') {
-        calculatedImpact = Number(confidentialityLevel) + Number(integrityLevel) + Number(availabilityLevel)
-      } else {
-        // multiplication
-        calculatedImpact = (Number(confidentialityLevel) * Number(integrityLevel) * Number(availabilityLevel)) / 10
-      }
-    }
-
-    // คำนวณระดับความเสี่ยง
-    const riskLevel = calculatedImpact * Number(likelihoodLevel)
-    const isAcceptable = riskLevel <= Number(selectedRiskEntry.acceptableRiskThreshold)
-
-    setTreatmentFormData(prev => ({
-      ...prev,
-      residualRisk: {
-        ...prev.residualRisk,
-        calculatedImpact,
-        riskLevel,
-        isAcceptable
-      }
-    }))
-  }
-
   // Handle tab change
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue)
@@ -506,11 +468,92 @@ export default function RiskManagementPage() {
     }))
   }
 
+  const validateForm = data => {
+    const errors = {}
+    const isSpecialType = ['Internal Factor', 'External Factor', 'Other'].includes(data.riskType)
+
+    // Basic validation
+    if (!data.riskType) errors.riskType = 'กรุณาระบุประเภทความเสี่ยง'
+    if (!data.riskIssue) errors.riskIssue = 'กรุณาระบุประเด็นความเสี่ยง'
+    if (!data.threat) errors.threat = 'กรุณาระบุภัยคุกคาม'
+    if (!data.vulnerability) errors.vulnerability = 'กรุณาระบุจุดอ่อน'
+
+    // Asset validation for non-special types
+    if (!isSpecialType && (!data.assetId || !data.assetName)) {
+      errors.asset = 'กรุณาเลือกสินทรัพย์'
+    }
+
+    // Risk assessment validation
+    if (isSpecialType) {
+      if (!data.impactLevel) errors.impact = 'กรุณาระบุระดับผลกระทบ'
+    } else {
+      if (!data.confidentialityLevel || !data.integrityLevel || !data.availabilityLevel) {
+        errors.cia = 'กรุณาระบุระดับผลกระทบให้ครบทุกด้าน'
+      }
+    }
+
+    // Likelihood validation - เพิ่มการ validate
+    if (!data.likelihoodLevel) {
+      errors.likelihood = 'กรุณาระบุระดับโอกาสเกิด'
+    } else if (data.likelihoodLevel < 1) {
+      errors.likelihood = 'ระดับโอกาสเกิดต้องมีค่าอย่างน้อย 1'
+    }
+
+    return Object.keys(errors).length > 0 ? errors : null
+  }
+
+  const validateTreatmentPlan = data => {
+    const errors = {}
+
+    if (!data.treatmentOption) errors.treatmentOption = 'กรุณาเลือกวิธีการจัดการ'
+    if (data.treatmentOption === 'Other' && !data.otherOption) {
+      errors.otherOption = 'กรุณาระบุวิธีการจัดการอื่นๆ'
+    }
+    if (!data.description) errors.description = 'กรุณาระบุรายละเอียด'
+    if (!data.startDate) errors.startDate = 'กรุณาระบุวันที่เริ่ม'
+    if (!data.endDate) errors.endDate = 'กรุณาระบุวันที่สิ้นสุด'
+    if (!data.responsible) errors.responsible = 'กรุณาระบุผู้รับผิดชอบ'
+
+    // Validate residual risk
+    if (!data.residualRisk.confidentialityLevel) errors['residualRisk.confidentialityLevel'] = 'กรุณาระบุระดับความลับ'
+    if (!data.residualRisk.integrityLevel) errors['residualRisk.integrityLevel'] = 'กรุณาระบุระดับความถูกต้อง'
+    if (!data.residualRisk.availabilityLevel) errors['residualRisk.availabilityLevel'] = 'กรุณาระบุระดับความพร้อมใช้'
+    if (!data.residualRisk.likelihoodLevel) errors['residualRisk.likelihoodLevel'] = 'กรุณาระบุระดับโอกาสเกิด'
+
+    return Object.keys(errors).length > 0 ? errors : null
+  }
+  // Improved error handling
+  const handleError = error => {
+    console.error('Error:', error)
+    let message = 'เกิดข้อผิดพลาด'
+
+    if (error.response?.data?.message) {
+      message = error.response.data.message
+    } else if (error.message) {
+      message = error.message
+    }
+
+    setSnackbar({
+      open: true,
+      message,
+      severity: 'error'
+    })
+  }
+
   // Open risk entry form dialog
   const handleAddRiskEntry = () => {
     // Default impact level from risk assessment if available
     const defaultImpactLevel =
       riskAssessment?.impactLevels?.length > 0 ? Math.ceil(riskAssessment.impactLevels.length / 2) : 5
+
+    if (!riskAssessment?.acceptableRiskThreshold) {
+      setSnackbar({
+        open: true,
+        message: 'กรุณากำหนดค่าระดับความเสี่ยงที่ยอมรับได้ใน Risk Assessment ก่อน',
+        severity: 'error'
+      })
+      return
+    }
 
     setRiskFormData({
       riskType: '',
@@ -534,7 +577,7 @@ export default function RiskManagementPage() {
       likelihoodLevel:
         riskAssessment?.likelihoodLevels?.length > 0 ? Math.ceil(riskAssessment.likelihoodLevels.length / 2) : 3,
       calculationMethod: riskCriteria?.calculationMethod || 'addition',
-      acceptableRiskThreshold: riskAssessment?.acceptableRiskThreshold || 15
+      acceptableRiskThreshold: riskAssessment.acceptableRiskThreshold // ใช้ค่าจาก riskAssessment เท่านั้น
     })
     setIsEditMode(false)
     setOpenRiskDialog(true)
@@ -586,124 +629,160 @@ export default function RiskManagementPage() {
     setSelectedRiskEntry(entry)
   }
 
+  // Load selected asset's CIA levels
+  const fetchAssetDetails = async assetId => {
+    try {
+      const response = await fetch(`https://ismsp-backend.onrender.com/api/7SUPP/resource/files/${assetId}`)
+      const data = await response.json()
+
+      if (data.success) {
+        setAssetCIAValues({
+          confidentialityLevel: data.data.confidentialityLevel,
+          integrityLevel: data.data.integrityLevel,
+          availabilityLevel: data.data.availabilityLevel,
+          isCriticalAsset: data.data.isCriticalAsset
+        })
+
+        setRiskFormData(prev => ({
+          ...prev,
+          assetId: data.data._id,
+          assetName: data.data.resourceName
+        }))
+      }
+    } catch (error) {
+      console.error('Error fetching asset details:', error)
+    }
+  }
+
+  const handleAssetChange = async (event, newValue) => {
+    if (newValue) {
+      const selectedAsset = assets.find(asset => asset._id === newValue._id)
+
+      if (selectedAsset) {
+        // อัพเดท form data
+        setRiskFormData(prev => ({
+          ...prev,
+          assetId: selectedAsset._id,
+          assetName: selectedAsset.resourceName
+        }))
+
+        // อัพเดตค่า CIA จาก asset โดยตรง
+        setAssetCIAValues({
+          confidentialityLevel: selectedAsset.confidentialityLevel || 1,
+          integrityLevel: selectedAsset.integrityLevel || 1,
+          availabilityLevel: selectedAsset.availabilityLevel || 1,
+          isCriticalAsset: selectedAsset.isCriticalAsset
+        })
+
+        console.log('Selected Asset:', selectedAsset)
+        console.log('CIA Score:', ciaScore)
+        console.log('Critical Asset Threshold:', riskCriteria?.criticalAssetThreshold)
+        console.log('Is Critical:', isCritical)
+      }
+    } else {
+      // Reset values
+      setRiskFormData(prev => ({
+        ...prev,
+        assetId: null,
+        assetName: ''
+      }))
+
+      setAssetCIAValues({
+        confidentialityLevel: 1,
+        integrityLevel: 1,
+        availabilityLevel: 1,
+        isCriticalAsset: false
+      })
+    }
+  }
+
   // Submit risk entry form
   const handleSubmitRiskEntry = async e => {
     e.preventDefault()
 
-    // Only check for asset if it's a non-special risk type
-    const specialRiskTypes = ['Internal Factor', 'External Factor', 'Other']
-    const isSpecialRiskType = specialRiskTypes.includes(riskFormData.riskType)
-
-    if (!isSpecialRiskType) {
-      // Check if asset is selected (ไม่จำเป็นต้องเลือกสินทรัพย์สำหรับ Special Risk Types)
-      if (!riskFormData.assetId || !riskFormData.assetName) {
-        // Existing validation logic for assets
-        if (riskFormData.assetId && !riskFormData.assetName) {
-          const selectedAsset = assets.find(asset => asset._id === riskFormData.assetId)
-          if (selectedAsset) {
-            setRiskFormData(prev => ({
-              ...prev,
-              assetName: selectedAsset.resourceName
-            }))
-          } else {
-            setSnackbar({
-              open: true,
-              message: 'กรุณาเลือกสินทรัพย์ให้ถูกต้อง',
-              severity: 'error'
-            })
-            return
-          }
-        } else {
-          setSnackbar({
-            open: true,
-            message: 'กรุณาเลือกสินทรัพย์',
-            severity: 'error'
-          })
-          return
-        }
-      }
+    // Validate form first
+    const errors = validateForm(riskFormData)
+    if (errors) {
+      setSnackbar({
+        open: true,
+        message: Object.values(errors)[0],
+        severity: 'error'
+      })
+      return
     }
 
-    setLoading(true)
-
     try {
+      setLoading(prev => ({ ...prev, submitting: true }))
+
+      if (!riskFormData.riskType || !riskFormData.riskIssue) {
+        throw new Error('กรุณากรอกข้อมูลให้ครบถ้วน')
+      }
+
       const payload = {
-        ...riskFormData,
-        impactScore: calculatedValues.impactScore,
+        riskType: riskFormData.riskType,
+        riskIssue: riskFormData.riskIssue,
+        threat: riskFormData.threat,
+        vulnerability: riskFormData.vulnerability,
+        existingControls: riskFormData.existingControls || '',
+        newControl: riskFormData.newControl || '',
+        impactLevel: riskFormData.impactLevel,
+        likelihoodLevel: riskFormData.likelihoodLevel,
         riskLevel: calculatedValues.riskLevel,
-        exceedsThreshold: calculatedValues.exceedsThreshold
+        exceedsThreshold: calculatedValues.exceedsThreshold,
+        calculationMethod: riskCalculationMethod
       }
 
-      // field เฉพาะสำหรับ special risk types
-      if (isSpecialRiskType) {
-        payload.impactLevel = Number(riskFormData.impactLevel)
-        payload.assetId = null // Set to null instead of empty string
-      } else if (!payload.assetId) {
-        // If not a special risk type but assetId is empty, it's an error
-        setSnackbar({
-          open: true,
-          message: 'กรุณาเลือกสินทรัพย์',
-          severity: 'error'
-        })
-        return
+      // Only include asset info for non-special types
+      if (!['Internal Factor', 'External Factor', 'Other'].includes(riskFormData.riskType)) {
+        payload.assetId = riskFormData.assetId
+        payload.assetName = riskFormData.assetName
       }
 
-      console.log('Sending payload:', payload)
+      console.log('Sending payload:', payload) // Log for debugging
 
       let response
-      let message
-
       if (isEditMode) {
         response = await fetch(`https://ismsp-backend.onrender.com/api/8OPER/risk-entry/${selectedRiskEntry._id}`, {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         })
-        message = 'อัปเดตรายการประเมินความเสี่ยงสำเร็จ'
       } else {
         response = await fetch('https://ismsp-backend.onrender.com/api/8OPER/risk-entry', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         })
-        message = 'เพิ่มรายการประเมินความเสี่ยงสำเร็จ'
       }
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'การดำเนินการไม่สำเร็จ')
+        const error = await response.json()
+        throw new Error(error.message || 'การบันทึกข้อมูลไม่สำเร็จ')
       }
 
       const data = await response.json()
 
-      // Refresh risk entries list
-      fetchRiskEntries()
+      await fetchRiskEntries() // รอให้ fetch ข้อมูลใหม่เสร็จก่อน
 
-      // If we were editing, update the selected risk entry
       if (isEditMode) {
         setSelectedRiskEntry(data.data)
       }
 
-      // Close dialog and show success message
       setOpenRiskDialog(false)
       setSnackbar({
         open: true,
-        message,
+        message: `${isEditMode ? 'แก้ไข' : 'เพิ่ม'}รายการความเสี่ยงสำเร็จ`,
         severity: 'success'
       })
     } catch (error) {
-      console.error('Error submitting risk entry:', error)
+      console.error('Submit error:', error)
       setSnackbar({
         open: true,
         message: error.message,
         severity: 'error'
       })
     } finally {
-      setLoading(false)
+      setLoading(prev => ({ ...prev, submitting: false }))
     }
   }
 
@@ -806,8 +885,8 @@ export default function RiskManagementPage() {
       responsible: plan.responsible,
       residualRisk: {
         confidentialityLevel: plan.residualRisk.confidentialityLevel,
-        integrityLevel: plan.residualRisk.integrityLevel,
-        availabilityLevel: plan.residualRisk.availabilityLevel,
+        integrityLevel: plan.integrityLevel,
+        availabilityLevel: plan.availabilityLevel,
         likelihoodLevel: plan.residualRisk.likelihoodLevel || selectedRiskEntry.likelihoodLevel,
         calculatedImpact: plan.residualRisk.calculatedImpact,
         riskLevel: plan.residualRisk.riskLevel,
@@ -823,70 +902,55 @@ export default function RiskManagementPage() {
   // Submit treatment plan form
   const handleSubmitTreatmentPlan = async e => {
     e.preventDefault()
-    setLoading(true)
+
+    const errors = validateTreatmentPlan(treatmentFormData)
+    if (errors) {
+      setSnackbar({
+        open: true,
+        message: Object.values(errors)[0],
+        severity: 'error'
+      })
+      return
+    }
+
+    setLoading(prev => ({ ...prev, submitting: true }))
 
     try {
-      let response
-      let message
+      const url = isTreatmentEditMode
+        ? `https://ismsp-backend.onrender.com/api/8OPER/risk-entry/${selectedRiskEntry._id}/treatment-plans/${selectedTreatmentPlan._id}`
+        : `https://ismsp-backend.onrender.com/api/8OPER/risk-entry/${selectedRiskEntry._id}/treatment-plans`
 
-      if (isTreatmentEditMode) {
-        response = await fetch(
-          `https://ismsp-backend.onrender.com/api/8OPER/risk-entry/${selectedRiskEntry._id}/treatment-plans/${selectedTreatmentPlan._id}`,
-          {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(treatmentFormData)
-          }
-        )
-        message = 'อัปเดตแผนการจัดการความเสี่ยงสำเร็จ'
-      } else {
-        response = await fetch(
-          `https://ismsp-backend.onrender.com/api/8OPER/risk-entry/${selectedRiskEntry._id}/treatment-plans`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(treatmentFormData)
-          }
-        )
-        message = 'เพิ่มแผนการจัดการความเสี่ยงสำเร็จ'
-      }
+      const response = await fetch(url, {
+        method: isTreatmentEditMode ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(treatmentFormData)
+      })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || 'การดำเนินการไม่สำเร็จ')
+        const error = await response.json()
+        throw new Error(error.message)
       }
 
       const data = await response.json()
-
-      // Update the selected risk entry
       setSelectedRiskEntry(data.data)
+      await fetchRiskEntries()
 
-      // Refresh risk entries list
-      fetchRiskEntries()
-
-      // Close dialog and show success message
       setOpenTreatmentDialog(false)
       setSnackbar({
         open: true,
-        message,
+        message: `${isTreatmentEditMode ? 'อัปเดต' : 'เพิ่ม'}แผนจัดการความเสี่ยงสำเร็จ`,
         severity: 'success'
       })
     } catch (error) {
-      console.error('Error submitting treatment plan:', error)
       setSnackbar({
         open: true,
         message: error.message,
         severity: 'error'
       })
     } finally {
-      setLoading(false)
+      setLoading(prev => ({ ...prev, submitting: false }))
     }
   }
-
   // Delete treatment plan
   const handleDeleteTreatmentPlan = async planId => {
     if (!selectedRiskEntry) return
@@ -1107,37 +1171,11 @@ export default function RiskManagementPage() {
                     </ListItem>
                   ) : (
                     filteredEntries.map(entry => (
-                      <Fragment key={entry._id}>
+                      <React.Fragment key={`risk-entry-${entry._id}`}>
                         <ListItem
-                          button
                           onClick={() => handleViewRiskEntry(entry)}
                           selected={selectedRiskEntry && selectedRiskEntry._id === entry._id}
-                          secondaryAction={
-                            <Box>
-                              <Tooltip title='แก้ไข'>
-                                <IconButton
-                                  edge='end'
-                                  onClick={e => {
-                                    e.stopPropagation()
-                                    handleEditRiskEntry(entry)
-                                  }}
-                                >
-                                  <EditIcon />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title='ลบ'>
-                                <IconButton
-                                  edge='end'
-                                  onClick={e => {
-                                    e.stopPropagation()
-                                    handleDeleteRiskEntry(entry._id)
-                                  }}
-                                >
-                                  <DeleteIcon />
-                                </IconButton>
-                              </Tooltip>
-                            </Box>
-                          }
+                          sx={{ cursor: 'pointer' }}
                         >
                           <ListItemIcon>
                             {entry.exceedsThreshold ? (
@@ -1157,7 +1195,7 @@ export default function RiskManagementPage() {
                                 <Chip
                                   size='small'
                                   color={getRiskLevelColor(entry.riskLevel)}
-                                  label={`${entry.riskLevel.toFixed(1)}`}
+                                  label={`${entry.riskLevel?.toFixed(1)}`}
                                 />
                               </Box>
                             }
@@ -1173,9 +1211,27 @@ export default function RiskManagementPage() {
                               </Box>
                             }
                           />
+                          <Box>
+                            <IconButton
+                              onClick={e => {
+                                e.stopPropagation() // ป้องกันการ trigger onClick ของ ListItem
+                                handleEditRiskEntry(entry)
+                              }}
+                            >
+                              <EditIcon />
+                            </IconButton>
+                            <IconButton
+                              onClick={e => {
+                                e.stopPropagation() // ป้องกันการ trigger onClick ของ ListItem
+                                handleDeleteRiskEntry(entry._id)
+                              }}
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </Box>
                         </ListItem>
                         <Divider />
-                      </Fragment>
+                      </React.Fragment>
                     ))
                   )}
                 </List>
@@ -1237,9 +1293,6 @@ export default function RiskManagementPage() {
                     </Grid>
 
                     {/* Risk assessment scores */}
-                    <Typography variant='subtitle1' sx={{ mt: 2 }}>
-                      ระดับความเสี่ยง
-                    </Typography>
                     <Grid container spacing={2}>
                       <Grid item xs={12} sm={6}>
                         <Typography variant='body2'>
@@ -1262,7 +1315,9 @@ export default function RiskManagementPage() {
                         </Typography>
                       </Grid>
                       <Grid item xs={12} sm={6}>
-                        <Typography variant='body2'>ผลกระทบรวม: {selectedRiskEntry.impactScore.toFixed(1)}</Typography>
+                        <Typography variant='body2'>
+                          ผลกระทบรวม: {selectedRiskEntry.impactLevel?.toFixed(1) || '-'}
+                        </Typography>
                       </Grid>
                       <Grid item xs={12} sm={6}>
                         <Typography variant='body2'>
@@ -1272,7 +1327,6 @@ export default function RiskManagementPage() {
                         </Typography>
                       </Grid>
                     </Grid>
-
                     {/* Treatment plans section */}
                     <Box sx={{ mt: 3 }}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
@@ -1362,11 +1416,15 @@ export default function RiskManagementPage() {
       <Dialog open={openRiskDialog} onClose={() => setOpenRiskDialog(false)} maxWidth='md' fullWidth>
         <DialogTitle>{isEditMode ? 'แก้ไขรายการความเสี่ยง' : 'เพิ่มรายการความเสี่ยง'}</DialogTitle>
         <form onSubmit={handleSubmitRiskEntry}>
-          <DialogContent>
-            <Grid container spacing={2}>
+          <DialogContent sx={{ pt: 1 }}>
+            {' '}
+            {/* เพิ่ม padding-top */}
+            <Grid container spacing={3}>
+              {' '}
+              {/* เพิ่ม spacing ระหว่าง Grid items */}
               {/* Asset Information */}
               <Grid item xs={12} sm={6}>
-                <FormControl fullWidth margin='normal'>
+                <FormControl fullWidth>
                   <InputLabel>ประเภทความเสี่ยง</InputLabel>
                   <Select
                     name='riskType'
@@ -1383,38 +1441,63 @@ export default function RiskManagementPage() {
                   </Select>
                 </FormControl>
               </Grid>
-
-              {/* Show asset selection only for non-special risk types */}
               {!['Internal Factor', 'External Factor', 'Other'].includes(riskFormData.riskType) && (
-                <>
-                  <Grid item xs={12} sm={6}>
-                    <FormControl fullWidth margin='normal'>
-                      <InputLabel>สินทรัพย์</InputLabel>
-                      <Select
-                        name='assetId'
-                        value={riskFormData.assetId}
-                        onChange={handleRiskFormChange}
-                        label='สินทรัพย์'
-                        required
-                      >
-                        {assets
-                          .filter(asset => !riskFormData.riskType || asset.category === riskFormData.riskType)
-                          .map(asset => (
-                            <MenuItem key={asset._id} value={asset._id}>
-                              {asset.resourceName}
-                            </MenuItem>
-                          ))}
-                      </Select>
-                    </FormControl>
-                  </Grid>
-                </>
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth>
+                    <Autocomplete
+                      id={`asset-select-${riskFormData.riskType}`}
+                      value={assets.find(asset => asset._id === riskFormData.assetId) || null}
+                      onChange={handleAssetChange}
+                      options={assets.filter(asset => asset.category === riskFormData.riskType)}
+                      getOptionLabel={option => option.resourceName || ''}
+                      isOptionEqualToValue={(option, value) => option._id === value._id}
+                      renderInput={params => (
+                        <TextField
+                          {...params}
+                          label='เลือกสินทรัพย์'
+                          required
+                          error={!riskFormData.assetId}
+                          helperText={!riskFormData.assetId ? 'กรุณาเลือกสินทรัพย์' : ''}
+                        />
+                      )}
+                      noOptionsText='ไม่พบสินทรัพย์'
+                    />
+                  </FormControl>
+                </Grid>
               )}
-
+              {/* CIA Values Display */}
+              {riskFormData.assetId && (
+                <Grid item xs={12}>
+                  <Paper variant='outlined' sx={{ p: 2 }}>
+                    <Typography variant='subtitle1' gutterBottom>
+                      Asset CIA Levels
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} sm={4}>
+                        <Typography variant='body2'>Confidentiality: {assetCIAValues.confidentialityLevel}</Typography>
+                      </Grid>
+                      <Grid item xs={12} sm={4}>
+                        <Typography variant='body2'>Integrity: {assetCIAValues.integrityLevel}</Typography>
+                      </Grid>
+                      <Grid item xs={12} sm={4}>
+                        <Typography variant='body2'>Availability: {assetCIAValues.availabilityLevel}</Typography>
+                      </Grid>
+                    </Grid>
+                    <Box sx={{ mt: 1, display: 'flex', justifyContent: 'flex-start' }}>
+                      {/* ดึงค่า isCriticalAsset จากสินทรัพย์ที่เลือก */}
+                      <Chip
+                        size='small'
+                        color={assetCIAValues.isCriticalAsset ? 'error' : 'default'}
+                        label={assetCIAValues.isCriticalAsset ? 'Critical Asset' : 'Non-Critical Asset'}
+                      />
+                    </Box>
+                  </Paper>
+                </Grid>
+              )}
               {/* Risk Information */}
               <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  margin='normal'
                   label='ประเด็นความเสี่ยง'
                   name='riskIssue'
                   value={riskFormData.riskIssue}
@@ -1422,11 +1505,9 @@ export default function RiskManagementPage() {
                   required
                 />
               </Grid>
-
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  margin='normal'
                   label='ภัยคุกคาม'
                   name='threat'
                   value={riskFormData.threat}
@@ -1434,11 +1515,9 @@ export default function RiskManagementPage() {
                   required
                 />
               </Grid>
-
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  margin='normal'
                   label='จุดอ่อน'
                   name='vulnerability'
                   value={riskFormData.vulnerability}
@@ -1446,11 +1525,9 @@ export default function RiskManagementPage() {
                   required
                 />
               </Grid>
-
               <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  margin='normal'
                   label='การควบคุมที่มีอยู่'
                   name='existingControls'
                   value={riskFormData.existingControls}
@@ -1459,11 +1536,9 @@ export default function RiskManagementPage() {
                   rows={2}
                 />
               </Grid>
-
               <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  margin='normal'
                   label='การควบคุมที่ควรเพิ่ม'
                   name='newControl'
                   value={riskFormData.newControl}
@@ -1472,177 +1547,89 @@ export default function RiskManagementPage() {
                   rows={2}
                 />
               </Grid>
-
               {/* Risk Assessment */}
               <Grid item xs={12}>
-                <Typography variant='subtitle1' gutterBottom>
+                <Typography variant='subtitle1' sx={{ mb: 2 }}>
                   การประเมินความเสี่ยง
                 </Typography>
               </Grid>
-
               <Grid item xs={12} sm={6}>
-                <FormControl fullWidth margin='normal'>
-                  <InputLabel>วิธีการคำนวณ</InputLabel>
+                <FormControl fullWidth>
+                  <InputLabel>วิธีการคำนวณความเสี่ยง</InputLabel>
                   <Select
-                    name='calculationMethod'
-                    value={riskFormData.calculationMethod}
-                    onChange={handleRiskFormChange}
-                    label='วิธีการคำนวณ'
-                    disabled={['Internal Factor', 'External Factor', 'Other'].includes(riskFormData.riskType)}
+                    value={riskCalculationMethod}
+                    onChange={e => setRiskCalculationMethod(e.target.value)}
+                    label='วิธีการคำนวณความเสี่ยง'
                   >
-                    {calculationMethods.map(method => (
-                      <MenuItem key={method.value} value={method.value}>
-                        {method.label}
+                    <MenuItem value='addition'>การบวก (Impact + Likelihood)</MenuItem>
+                    <MenuItem value='multiplication'>การคูณ (Impact × Likelihood)</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <FormControl fullWidth>
+                  <InputLabel>ระดับผลกระทบ (Impact)</InputLabel>
+                  <Select
+                    value={riskFormData.impactLevel}
+                    onChange={e => {
+                      setRiskFormData(prev => ({
+                        ...prev,
+                        impactLevel: e.target.value
+                      }))
+                    }}
+                    label='ระดับผลกระทบ (Impact)'
+                  >
+                    {riskAssessment?.impactLevels?.map(level => (
+                      <MenuItem key={level.level} value={level.level}>
+                        {level.level} - {level.name}
                       </MenuItem>
                     ))}
                   </Select>
                 </FormControl>
               </Grid>
-
               <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  margin='normal'
-                  label='ระดับความเสี่ยงที่ยอมรับได้'
-                  name='acceptableRiskThreshold'
-                  type='number'
-                  value={riskFormData.acceptableRiskThreshold}
-                  onChange={handleRiskFormChange}
-                  InputProps={{ inputProps: { min: 1 } }}
-                />
-              </Grid>
-
-              {/* Conditional rendering based on risk type */}
-              {['Internal Factor', 'External Factor', 'Other'].includes(riskFormData.riskType) ? (
-                // For special risk types, show only a single impact slider
-                <Grid item xs={12}>
-                  <FormControl fullWidth margin='normal'>
-                    <FormLabel>ระดับผลกระทบ (Impact)</FormLabel>
-                    <Slider
-                      name='impactLevel'
-                      value={riskFormData.impactLevel}
-                      onChange={handleSliderChange('impactLevel')}
-                      step={1}
-                      marks
-                      min={1}
-                      max={5}
-                      valueLabelDisplay='auto'
-                    />
-                    <Typography variant='caption' color='text.secondary'>
-                      ระดับผลกระทบ: {riskFormData.impactLevel}
-                    </Typography>
-                  </FormControl>
-                </Grid>
-              ) : (
-                // For regular risk types, show CIA sliders
-                <>
-                  <Grid item xs={12} sm={4}>
-                    <FormControl fullWidth margin='normal'>
-                      <FormLabel>ระดับผลกระทบด้านความลับ (C)</FormLabel>
-                      <Slider
-                        name='confidentialityLevel'
-                        value={riskFormData.confidentialityLevel}
-                        onChange={handleSliderChange('confidentialityLevel')}
-                        step={1}
-                        marks
-                        min={1}
-                        max={maxLevels.confidentiality}
-                        valueLabelDisplay='auto'
-                      />
-                      <Typography variant='caption' color='text.secondary'>
-                        {getImpactLevelText('C', riskFormData.confidentialityLevel)}
-                      </Typography>
-                    </FormControl>
-                  </Grid>
-
-                  <Grid item xs={12} sm={4}>
-                    <FormControl fullWidth margin='normal'>
-                      <FormLabel>ระดับผลกระทบด้านความถูกต้อง (I)</FormLabel>
-                      <Slider
-                        name='integrityLevel'
-                        value={riskFormData.integrityLevel}
-                        onChange={handleSliderChange('integrityLevel')}
-                        step={1}
-                        marks
-                        min={1}
-                        max={maxLevels.integrity}
-                        valueLabelDisplay='auto'
-                      />
-                      <Typography variant='caption' color='text.secondary'>
-                        {getImpactLevelText('I', riskFormData.integrityLevel)}
-                      </Typography>
-                    </FormControl>
-                  </Grid>
-
-                  <Grid item xs={12} sm={4}>
-                    <FormControl fullWidth margin='normal'>
-                      <FormLabel>ระดับผลกระทบด้านความพร้อมใช้ (A)</FormLabel>
-                      <Slider
-                        name='availabilityLevel'
-                        value={riskFormData.availabilityLevel}
-                        onChange={handleSliderChange('availabilityLevel')}
-                        step={1}
-                        marks
-                        min={1}
-                        max={maxLevels.availability}
-                        valueLabelDisplay='auto'
-                      />
-                      <Typography variant='caption' color='text.secondary'>
-                        {getImpactLevelText('A', riskFormData.availabilityLevel)}
-                      </Typography>
-                    </FormControl>
-                  </Grid>
-                </>
-              )}
-
-              <Grid item xs={12}>
-                <FormControl fullWidth margin='normal'>
-                  <FormLabel>ระดับความน่าจะเป็น (Likelihood)</FormLabel>
-                  <Slider
-                    name='likelihoodLevel'
+                <FormControl fullWidth>
+                  <InputLabel>ระดับความน่าจะเป็น (Likelihood)</InputLabel>
+                  <Select
                     value={riskFormData.likelihoodLevel}
-                    onChange={handleSliderChange('likelihoodLevel')}
-                    step={1}
-                    marks
-                    min={1}
-                    max={maxLevels.likelihood}
-                    valueLabelDisplay='auto'
-                  />
-                  <Typography variant='caption' color='text.secondary'>
-                    {getLikelihoodLevelText(riskFormData.likelihoodLevel)}
-                  </Typography>
+                    onChange={e => {
+                      setRiskFormData(prev => ({
+                        ...prev,
+                        likelihoodLevel: e.target.value
+                      }))
+                    }}
+                    label='ระดับความน่าจะเป็น (Likelihood)'
+                  >
+                    {riskAssessment?.likelihoodLevels?.map(level => (
+                      <MenuItem key={level.level} value={level.level}>
+                        {level.level} - {level.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
                 </FormControl>
               </Grid>
-
               {/* Risk Calculation Preview */}
               <Grid item xs={12}>
                 <Box
-                  sx={{ mt: 2, p: 2, bgcolor: 'background.paper', borderRadius: 1, border: 1, borderColor: 'divider' }}
+                  sx={{
+                    mt: 1,
+                    p: 2,
+                    bgcolor: 'background.paper',
+                    borderRadius: 1,
+                    border: 1,
+                    borderColor: 'divider'
+                  }}
                 >
                   <Typography variant='subtitle2' gutterBottom>
-                    ผลการคำนวณ
+                    ผลการประเมิน
                   </Typography>
                   <Grid container spacing={2}>
-                    <Grid item xs={12} sm={4}>
+                    <Grid item xs={12} sm={6}>
                       <Typography variant='body2'>
-                        ระดับผลกระทบรวม: <strong>{calculatedValues.impactScore.toFixed(1)}</strong>
-                        {calculatedValues.impactSeverity && ` (${calculatedValues.impactSeverity})`}
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={12} sm={4}>
-                      <Typography variant='body2'>
-                        ระดับความเสี่ยง: <strong>{calculatedValues.riskLevel.toFixed(1)}</strong>
-                      </Typography>
-                    </Grid>
-                    <Grid item xs={12} sm={4}>
-                      <Typography variant='body2'>
-                        <Chip
-                          size='small'
-                          color={calculatedValues.exceedsThreshold ? 'error' : 'success'}
-                          label={
-                            calculatedValues.exceedsThreshold ? 'เกินระดับที่ยอมรับได้' : 'อยู่ในระดับที่ยอมรับได้'
-                          }
-                        />
+                        ระดับความเสี่ยง: <strong>{calculatedValues.riskLevel?.toFixed(1)}</strong>
+                        {calculatedValues.exceedsThreshold && (
+                          <Chip size='small' color='error' label='เกินที่ยอมรับได้' sx={{ ml: 1 }} />
+                        )}
                       </Typography>
                     </Grid>
                   </Grid>
@@ -1650,7 +1637,9 @@ export default function RiskManagementPage() {
               </Grid>
             </Grid>
           </DialogContent>
-          <DialogActions>
+          <DialogActions sx={{ p: 2.5 }}>
+            {' '}
+            {/* เพิ่ม padding */}
             <Button onClick={() => setOpenRiskDialog(false)}>ยกเลิก</Button>
             <Button type='submit' variant='contained' startIcon={<SaveIcon />}>
               บันทึก
@@ -1807,17 +1796,15 @@ export default function RiskManagementPage() {
                       value={
                         treatmentFormData.residualRisk.impactLevel ||
                         Math.round(
-                          (treatmentFormData.residualRisk.confidentialityLevel +
+                          treatmentFormData.residualRisk.confidentialityLevel +
                             treatmentFormData.residualRisk.integrityLevel +
-                            treatmentFormData.residualRisk.availabilityLevel) /
-                            3
+                            treatmentFormData.residualRisk.availabilityLevel
                         )
                       }
                       onChange={(event, newValue) => {
                         setTreatmentFormData(prev => ({
                           ...prev,
                           residualRisk: {
-                            ...prev.residualRisk,
                             impactLevel: newValue,
                             // ตั้งค่า CIA ให้เท่ากับค่า impactLevel เพื่อความสะดวกในการคำนวณ
                             confidentialityLevel: newValue,

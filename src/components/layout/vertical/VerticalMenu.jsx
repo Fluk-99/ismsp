@@ -138,6 +138,11 @@ const VerticalMenu = ({ scrollMenu }) => {
           <MenuItem href='/Clause8/Information_security_risk_assessment_and_treatment' icon={<>?</>}>
             Information security risk assessment and treatment
           </MenuItem>
+          {/*
+          <MenuItem href='/Clause8/test_risk' icon={<>?</>}>
+            Test
+          </MenuItem>
+*/}
         </SubMenu>
         <SubMenu label='Clause9' icon={<i className='tabler-award-filled' />}>
           <MenuItem href='/Clause9/Monitoring' icon={<>?</>}>

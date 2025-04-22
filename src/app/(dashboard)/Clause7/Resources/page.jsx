@@ -48,7 +48,10 @@ const ResourcesForm = () => {
     description: '',
     status: 'Active',
     file: null,
-    fileName: ''
+    fileName: '',
+    confidentialityLevel: '',
+    integrityLevel: '',
+    availabilityLevel: ''
   })
   const [editMode, setEditMode] = useState(false)
   const [currentResourceId, setCurrentResourceId] = useState(null)
@@ -58,6 +61,7 @@ const ResourcesForm = () => {
     message: '',
     severity: 'success'
   })
+  const [riskCriteria, setRiskCriteria] = useState(null)
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -95,6 +99,22 @@ const ResourcesForm = () => {
     }
   }
 
+  // Fetch risk criteria for CIA levels
+  useEffect(() => {
+    const fetchRiskCriteria = async () => {
+      try {
+        const response = await fetch('https://ismsp-backend.onrender.com/api/6PLAN/risk-criteria')
+        const data = await response.json()
+        if (data.success && data.data.length > 0) {
+          setRiskCriteria(data.data[0])
+        }
+      } catch (error) {
+        console.error('Error fetching risk criteria:', error)
+      }
+    }
+    fetchRiskCriteria()
+  }, [])
+
   // Update form values
   const handleChange = e => {
     const { name, value } = e.target
@@ -129,11 +149,21 @@ const ResourcesForm = () => {
         return
       }
 
+      // Validate CIA levels
+      if (!newResource.confidentialityLevel || !newResource.integrityLevel || !newResource.availabilityLevel) {
+        showNotification('กรุณากำหนดค่าระดับ CIA ให้ครบถ้วน', 'error')
+        setLoading(false)
+        return
+      }
+
       const formData = new FormData()
       formData.append('resourceName', newResource.resourceName)
       formData.append('category', newResource.category)
       formData.append('description', newResource.description)
       formData.append('status', newResource.status)
+      formData.append('confidentialityLevel', newResource.confidentialityLevel)
+      formData.append('integrityLevel', newResource.integrityLevel)
+      formData.append('availabilityLevel', newResource.availabilityLevel)
 
       // Only attach file if one was selected
       if (newResource.file) {
@@ -167,7 +197,10 @@ const ResourcesForm = () => {
         description: '',
         status: 'Active',
         file: null,
-        fileName: ''
+        fileName: '',
+        confidentialityLevel: '',
+        integrityLevel: '',
+        availabilityLevel: ''
       })
       setEditMode(false)
       setCurrentResourceId(null)
@@ -191,7 +224,10 @@ const ResourcesForm = () => {
       description: resource.description || '',
       status: resource.status,
       file: null,
-      fileName: resource.fileName || ''
+      fileName: resource.fileName || '',
+      confidentialityLevel: resource.confidentialityLevel || '',
+      integrityLevel: resource.integrityLevel || '',
+      availabilityLevel: resource.availabilityLevel || ''
     })
     setEditMode(true)
     setCurrentResourceId(resource._id)
@@ -385,6 +421,70 @@ const ResourcesForm = () => {
                 </Button>
               </Box>
             </Grid>
+
+            {/* CIA Level Selection */}
+            <Typography variant='h6' sx={{ mt: 3, mb: 2 }}>
+              ระดับความสำคัญของทรัพย์สิน
+            </Typography>
+
+            {riskCriteria && (
+              <Grid container spacing={3}>
+                {/* Confidentiality Level */}
+                <Grid item xs={12} md={4}>
+                  <FormControl fullWidth>
+                    <InputLabel>ระดับการรักษาความลับ (Confidentiality)</InputLabel>
+                    <Select
+                      value={newResource.confidentialityLevel || ''}
+                      onChange={e => setNewResource({ ...newResource, confidentialityLevel: e.target.value })}
+                      label='ระดับการรักษาความลับ (Confidentiality)'
+                    >
+                      {riskCriteria.confidentialityLevels.map(level => (
+                        <MenuItem key={level.level} value={level.level}>
+                          {level.level} - {level.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                {/* Integrity Level */}
+                <Grid item xs={12} md={4}>
+                  <FormControl fullWidth>
+                    <InputLabel>ระดับความถูกต้องของข้อมูล (Integrity)</InputLabel>
+                    <Select
+                      value={newResource.integrityLevel || ''}
+                      onChange={e => setNewResource({ ...newResource, integrityLevel: e.target.value })}
+                      label='ระดับความถูกต้องของข้อมูล (Integrity)'
+                    >
+                      {riskCriteria.integrityLevels.map(level => (
+                        <MenuItem key={level.level} value={level.level}>
+                          {level.level} - {level.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                {/* Availability Level */}
+                <Grid item xs={12} md={4}>
+                  <FormControl fullWidth>
+                    <InputLabel>ระดับความพร้อมใช้งาน (Availability)</InputLabel>
+                    <Select
+                      value={newResource.availabilityLevel || ''}
+                      onChange={e => setNewResource({ ...newResource, availabilityLevel: e.target.value })}
+                      label='ระดับความพร้อมใช้งาน (Availability)'
+                    >
+                      {riskCriteria.availabilityLevels.map(level => (
+                        <MenuItem key={level.level} value={level.level}>
+                          {level.level} - {level.name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+              </Grid>
+            )}
+
             <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
               {editMode && (
                 <Button
@@ -396,7 +496,10 @@ const ResourcesForm = () => {
                       description: '',
                       status: 'Active',
                       file: null,
-                      fileName: ''
+                      fileName: '',
+                      confidentialityLevel: '',
+                      integrityLevel: '',
+                      availabilityLevel: ''
                     })
                     setEditMode(false)
                     setCurrentResourceId(null)
@@ -476,9 +579,11 @@ const ResourcesForm = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell width='30%'>Resource Name</TableCell>
-                <TableCell width='15%'>Category</TableCell>
-                <TableCell width='25%'>Description</TableCell>
+                <TableCell width='20%'>Resource Name</TableCell>
+                <TableCell width='10%'>Category</TableCell>
+                <TableCell width='20%'>Description</TableCell>
+                <TableCell width='10%'>CIA Levels</TableCell>
+                <TableCell width='10%'>Critical Asset</TableCell>
                 <TableCell width='10%'>Status</TableCell>
                 <TableCell width='10%'>Document</TableCell>
                 <TableCell width='10%' align='center'>
@@ -489,49 +594,81 @@ const ResourcesForm = () => {
             <TableBody>
               {filteredResources.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} align='center'>
+                  <TableCell colSpan={8} align='center'>
                     No resources found
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredResources.map(resource => (
-                  <TableRow key={resource._id}>
-                    <TableCell>{resource.resourceName}</TableCell>
-                    <TableCell>{resource.category}</TableCell>
-                    <TableCell>{resource.description || '-'}</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={resource.status}
-                        size='small'
-                        color={resource.status === 'Active' ? 'success' : 'error'}
-                        variant='outlined'
-                      />
-                    </TableCell>
-                    <TableCell>
-                      {resource.fileName ? (
-                        <Tooltip title='Download Document'>
-                          <IconButton size='small' onClick={() => handleDownload(resource.fileName)}>
-                            <DescriptionIcon color='primary' />
+                filteredResources.map(resource => {
+                  // Calculate CIA score for critical asset determination
+                  const ciaScore =
+                    riskCriteria?.calculationMethod === 'addition'
+                      ? resource.confidentialityLevel + resource.integrityLevel + resource.availabilityLevel
+                      : resource.confidentialityLevel * resource.integrityLevel * resource.availabilityLevel
+
+                  const isCriticalAsset = ciaScore >= (riskCriteria?.criticalAssetThreshold || 0)
+
+                  return (
+                    <TableRow key={resource._id}>
+                      <TableCell>{resource.resourceName}</TableCell>
+                      <TableCell>{resource.category}</TableCell>
+                      <TableCell>{resource.description || '-'}</TableCell>
+                      <TableCell>
+                        <Tooltip
+                          title={`C:${resource.confidentialityLevel} I:${resource.integrityLevel} A:${resource.availabilityLevel}`}
+                        >
+                          <Box sx={{ display: 'flex', gap: 0.5 }}>
+                            <Chip size='small' label={`C - ${resource.confidentialityLevel}`} />
+                            <Chip size='small' label={`I - ${resource.integrityLevel}`} />
+                            <Chip size='small' label={`A - ${resource.availabilityLevel}`} />
+                          </Box>
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          size='small'
+                          color={isCriticalAsset ? 'error' : 'default'}
+                          label={isCriticalAsset ? 'Critical' : 'Non-Critical'}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={resource.status}
+                          size='small'
+                          color={resource.status === 'Active' ? 'success' : 'error'}
+                          variant='outlined'
+                        />
+                      </TableCell>
+                      <TableCell>
+                        {resource.fileName ? (
+                          <Tooltip title='Download Document'>
+                            <IconButton size='small' onClick={() => handleDownload(resource.fileName)}>
+                              <DescriptionIcon color='primary' />
+                            </IconButton>
+                          </Tooltip>
+                        ) : (
+                          'No file'
+                        )}
+                      </TableCell>
+                      <TableCell align='center'>
+                        <Tooltip title='Edit'>
+                          <IconButton size='small' onClick={() => handleEdit(resource)} sx={{ color: 'secondary' }}>
+                            <EditIcon fontSize='small' />
                           </IconButton>
                         </Tooltip>
-                      ) : (
-                        'No file'
-                      )}
-                    </TableCell>
-                    <TableCell align='center'>
-                      <Tooltip title='Edit'>
-                        <IconButton size='small' onClick={() => handleEdit(resource)} sx={{ color: 'secondary' }}>
-                          <EditIcon fontSize='small' />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title='Delete'>
-                        <IconButton size='small' onClick={() => handleDelete(resource._id)} sx={{ color: 'secondary' }}>
-                          <DeleteIcon fontSize='small' />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
-                ))
+                        <Tooltip title='Delete'>
+                          <IconButton
+                            size='small'
+                            onClick={() => handleDelete(resource._id)}
+                            sx={{ color: 'secondary' }}
+                          >
+                            <DeleteIcon fontSize='small' />
+                          </IconButton>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })
               )}
             </TableBody>
           </Table>
