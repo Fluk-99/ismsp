@@ -161,9 +161,9 @@ const ResourcesForm = () => {
       formData.append('category', newResource.category)
       formData.append('description', newResource.description)
       formData.append('status', newResource.status)
-      formData.append('confidentialityLevel', newResource.confidentialityLevel)
-      formData.append('integrityLevel', newResource.integrityLevel)
-      formData.append('availabilityLevel', newResource.availabilityLevel)
+      formData.append('confidentialityLevel', Number(newResource.confidentialityLevel))
+      formData.append('integrityLevel', Number(newResource.integrityLevel))
+      formData.append('availabilityLevel', Number(newResource.availabilityLevel))
 
       // Only attach file if one was selected
       if (newResource.file) {
@@ -601,12 +601,6 @@ const ResourcesForm = () => {
               ) : (
                 filteredResources.map(resource => {
                   // Calculate CIA score for critical asset determination
-                  const ciaScore =
-                    riskCriteria?.calculationMethod === 'addition'
-                      ? resource.confidentialityLevel + resource.integrityLevel + resource.availabilityLevel
-                      : resource.confidentialityLevel * resource.integrityLevel * resource.availabilityLevel
-
-                  const isCriticalAsset = ciaScore >= (riskCriteria?.criticalAssetThreshold || 0)
 
                   return (
                     <TableRow key={resource._id}>
@@ -627,8 +621,8 @@ const ResourcesForm = () => {
                       <TableCell>
                         <Chip
                           size='small'
-                          color={isCriticalAsset ? 'error' : 'default'}
-                          label={isCriticalAsset ? 'Critical' : 'Non-Critical'}
+                          color={resource.isCriticalAsset ? 'error' : 'default'}
+                          label={resource.isCriticalAsset ? 'Critical' : 'Non-Critical'}
                         />
                       </TableCell>
                       <TableCell>
