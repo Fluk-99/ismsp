@@ -763,13 +763,15 @@ export default function RiskAssessmentAndTreatment() {
         calculationMethod: riskCalculationMethod
       }
 
-      // Only include asset info for non-special types
+      {
+        /* Only include asset info for non-special types */
+      }
       if (!['Internal Factor', 'External Factor', 'Other'].includes(riskFormData.riskType)) {
         payload.assetId = riskFormData.assetId
         payload.assetName = riskFormData.assetName
       }
 
-      console.log('Sending payload:', payload) // Log for debugging
+      console.log('Sending payload:', payload)
 
       let response
       if (isEditMode) {

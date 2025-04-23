@@ -761,7 +761,6 @@ export default function RiskManagementPage() {
                 </Grid>
               )}
               {/* Rest of risk information fields */}
-              // ...existing risk information fields...
               {/* Risk Assessment section */}
               <Grid item xs={12}>
                 <Typography variant='subtitle1' gutterBottom>
@@ -808,10 +807,7 @@ export default function RiskManagementPage() {
                   </FormControl>
                 </Grid>
               ) : (
-                <>
-                  {/* CIA sliders */}
-                  // ...existing CIA sliders code...
-                </>
+                <>{/* CIA sliders */}</>
               )}
               {/* Risk Calculation Preview */}
               <Grid item xs={12}>
